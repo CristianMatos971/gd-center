@@ -1,0 +1,2215 @@
+{
+  "scenarios": [
+    {
+      "name": "walk_forward",
+      "description": "Walk forward for 15 steps along -Z (yaw = 0)",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [],
+      "initialState": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0,
+        "y": 0,
+        "z": -0.9999999999999999,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "run_forward",
+      "description": "Run forward for 15 steps along -Z (yaw = 0)",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [],
+      "initialState": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0,
+        "y": 0,
+        "z": -1.7500000000000002,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "diagonal_normalized",
+      "description": "Walk diagonally (forward + right) for 30 steps with yaw = 0.5 rad; speed must equal walkSpeed",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [],
+      "initialState": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0.5,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0.5630790622854016,
+        "y": 0,
+        "z": -1.9190992599695802,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "jump_and_land",
+      "description": "Jump from ground and simulate 45 steps (0.75s) until landing back on ground.y = 0",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [],
+      "initialState": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": true,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0,
+        "y": 0,
+        "z": -3.0000000000000027,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "bounds_clamp",
+      "description": "Run toward +X and -Z boundary corner and get clamped inside bounds shrunk by half player width/depth",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [],
+      "initialState": {
+        "x": 99,
+        "y": 0,
+        "z": -99,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": true,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": true,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 99.7,
+        "y": 0,
+        "z": -99.7,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "side_collision_with_box",
+      "description": "Walk right (+X) into a wall box at x=2.0 (width=1.0, so minX=1.5) and stop at x = 1.5 - 0.3 = 1.2",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [
+        {
+          "x": 2,
+          "y": 1,
+          "z": 0,
+          "width": 1,
+          "height": 2,
+          "depth": 2
+        }
+      ],
+      "initialState": {
+        "x": 0.5,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": true,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 1.2,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "landing_on_box",
+      "description": "Fall from above onto a platform box centered at (0, 0.5, 0) of height 1.0 (top at y=1.0)",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0.5,
+          "z": 0,
+          "width": 2,
+          "height": 1,
+          "depth": 2
+        }
+      ],
+      "initialState": {
+        "x": 0,
+        "y": 1.5,
+        "z": 0,
+        "vy": 0,
+        "onGround": false
+      },
+      "inputs": [
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      }
+    },
+    {
+      "name": "hitting_box_from_below",
+      "description": "Jump from ground under a low ceiling box centered at (0, 2.5, 0) of height 0.6 (bottom at y=2.2); head hits at y = 2.2 - 1.8 = 0.4 and vy resets to 0",
+      "physics": {
+        "tickRate": 60,
+        "gravity": 20,
+        "walkSpeed": 4,
+        "runSpeed": 7,
+        "jumpSpeed": 7,
+        "player": {
+          "width": 0.6,
+          "height": 1.8,
+          "depth": 0.6,
+          "eyeHeight": 1.6
+        }
+      },
+      "ground": {
+        "y": 0
+      },
+      "bounds": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 2.5,
+          "z": 0,
+          "width": 2,
+          "height": 0.6,
+          "depth": 2
+        }
+      ],
+      "initialState": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "vy": 0,
+        "onGround": true
+      },
+      "inputs": [
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": true,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "forward": false,
+          "back": false,
+          "left": false,
+          "right": false,
+          "run": false,
+          "jump": false,
+          "yaw": 0,
+          "pitch": 0
+        }
+      ],
+      "expectedFinalState": {
+        "x": 0,
+        "y": 0.3166666666666668,
+        "z": 0,
+        "vy": -1.6666666666666665,
+        "onGround": false
+      }
+    }
+  ]
+}
