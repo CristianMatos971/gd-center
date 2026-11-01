@@ -186,6 +186,18 @@ async function run() {
   )
   console.log(`[smoke-test] Alice received player_left for Bob (${leftEvent.id})`)
 
+  // Verify duplicate name (case-insensitive) is rejected with error message
+  console.log('[smoke-test] Testing duplicate name rejection (smokealice)...')
+  const dupClient = createClient('smokealice')
+  let dupRejected = false
+  try {
+    await dupClient.welcomePromise
+  } catch (err) {
+    dupRejected = true
+    console.log(`[smoke-test] Duplicate name rejected as expected: ${err.message}`)
+  }
+  assert(dupRejected, 'Duplicate case-insensitive name should be rejected')
+
   clientA.ws.close()
   await sleep(50)
   console.log('[smoke-test] PASS: All checks succeeded!')

@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { lerpAngle } from './GameEngine'
 import {
   stepMovement,
   type MovementState,
@@ -61,4 +62,12 @@ describe('stepMovement golden vectors', () => {
       expect(state.onGround).toBe(expected.onGround)
     })
   }
+
+  it('interpolates yaw across the -PI/+PI wrap boundary via shortest arc', () => {
+    const a = Math.PI - 0.1
+    const b = -Math.PI + 0.1
+    const mid = lerpAngle(a, b, 0.5)
+    // Midpoint across PI should have |cos(mid)| close to 1 (near +-PI), not 0
+    expect(Math.abs(Math.cos(mid))).toBeGreaterThan(0.99)
+  })
 })

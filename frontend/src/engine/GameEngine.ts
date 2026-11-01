@@ -114,6 +114,8 @@ export class GameEngine {
   private frameCount = 0
   private fpsWindowStart = 0
   private currentFps = 0
+  private lastInboundDeliverAt = 0
+  private lastOutboundDeliverAt = 0
 
   constructor(container: HTMLElement, mapData: MapData, playerName: string) {
     this.container = container
@@ -246,13 +248,21 @@ export class GameEngine {
         return
       }
 
-      if (this.fakeLatencyMs > 0) {
+      const now = performance.now()
+      const targetDeliverAt = Math.max(
+        this.lastInboundDeliverAt,
+        now + this.fakeLatencyMs
+      )
+      this.lastInboundDeliverAt = targetDeliverAt
+      const waitMs = Math.max(0, targetDeliverAt - now)
+
+      if (waitMs > 0) {
         const timerId = window.setTimeout(() => {
           this.activeTimeouts.delete(timerId)
           if (!this.isDisposed) {
             this.handleServerMessage(parsed)
           }
-        }, this.fakeLatencyMs)
+        }, waitMs)
         this.activeTimeouts.add(timerId)
       } else {
         this.handleServerMessage(parsed)
@@ -280,13 +290,21 @@ export class GameEngine {
 
   private sendWithOptionalDelay(payload: Record<string, unknown>): void {
     const serialized = JSON.stringify(payload)
-    if (this.fakeLatencyMs > 0) {
+    const now = performance.now()
+    const targetDeliverAt = Math.max(
+      this.lastOutboundDeliverAt,
+      now + this.fakeLatencyMs
+    )
+    this.lastOutboundDeliverAt = targetDeliverAt
+    const waitMs = Math.max(0, targetDeliverAt - now)
+
+    if (waitMs > 0) {
       const timerId = window.setTimeout(() => {
         this.activeTimeouts.delete(timerId)
         if (!this.isDisposed && this.ws?.readyState === WebSocket.OPEN) {
           this.ws.send(serialized)
         }
-      }, this.fakeLatencyMs)
+      }, waitMs)
       this.activeTimeouts.add(timerId)
     } else if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(serialized)
