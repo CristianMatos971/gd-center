@@ -1,121 +1,135 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { GameEngine } from './engine/GameEngine'
+import { useGameStore } from './store/useGameStore'
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const screen = useGameStore((s) => s.screen)
+  const playerName = useGameStore((s) => s.playerName)
+  const mapData = useGameStore((s) => s.mapData)
+  const errorMessage = useGameStore((s) => s.errorMessage)
+  const pointerLocked = useGameStore((s) => s.pointerLocked)
+  const setPlayerName = useGameStore((s) => s.setPlayerName)
+  const setMapData = useGameStore((s) => s.setMapData)
+  const setScreen = useGameStore((s) => s.setScreen)
+  const setErrorMessage = useGameStore((s) => s.setErrorMessage)
+  const resetToLogin = useGameStore((s) => s.resetToLogin)
+
+  const [isLoading, setIsLoading] = useState(false)
+  const containerRef = useRef(null)
+  const engineRef = useRef(null)
+
+  const handlePlay = async (e) => {
+    e.preventDefault()
+    const trimmed = playerName.trim()
+    if (trimmed.length < 1 || trimmed.length > 16) {
+      setErrorMessage('O nome deve ter entre 1 e 16 caracteres.')
+      return
+    }
+
+    setErrorMessage(null)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/map', { cache: 'no-store' })
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      const data = await response.json()
+      setMapData(data)
+      setScreen('playing')
+    } catch {
+      setErrorMessage(
+        'Falha ao carregar o mapa do servidor. Verifique se o backend está rodando.'
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (screen !== 'playing' || !mapData || !containerRef.current) {
+      return
+    }
+
+    const engine = new GameEngine(containerRef.current, mapData)
+    engineRef.current = engine
+
+    return () => {
+      engine.dispose()
+      engineRef.current = null
+    }
+  }, [screen, mapData])
+
+  if (screen === 'login' || screen === 'error') {
+    return (
+      <div className="login-backdrop">
+        <div className="login-card">
+          <h1>GD Center</h1>
+          <p className="subtitle">Campus UFGD — Multiplayer 3D</p>
+
+          {errorMessage && (
+            <div className="error-banner" role="alert">
+              <span>{errorMessage}</span>
+              {screen === 'error' && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => resetToLogin(null)}
+                >
+                  Voltar
+                </button>
+              )}
+            </div>
+          )}
+
+          {screen === 'login' && (
+            <form onSubmit={handlePlay} className="login-form">
+              <label htmlFor="player-name">Seu nome</label>
+              <input
+                id="player-name"
+                type="text"
+                maxLength={16}
+                placeholder="Digite seu nome (máx. 16)"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                disabled={isLoading}
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="play-btn"
+                disabled={isLoading || playerName.trim().length === 0}
+              >
+                {isLoading ? 'CARREGANDO...' : 'JOGAR'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div className="game-wrapper">
+      <div ref={containerRef} className="game-canvas-container" />
+
+      {/* Center crosshair dot */}
+      <div className="crosshair" />
+
+      {/* Pointer lock overlay */}
+      {!pointerLocked && (
+        <div
+          className="pointer-overlay"
+          onClick={() => engineRef.current?.requestPointerLock()}
         >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <div className="pointer-overlay-box">
+            <h2>Clique para jogar</h2>
+            <p>Use o mouse para olhar ao redor (ESC para liberar o cursor)</p>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </div>
   )
 }
 

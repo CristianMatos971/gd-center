@@ -28,3 +28,7 @@ node_modules/
 dist/
 dist-ssr/
 target/
+
+# Task instructions and reports
+currentTask.md
+taskDone.md
