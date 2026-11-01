@@ -47,7 +47,7 @@ export interface SpawnPoint {
   yaw: number
 }
 
-export interface MapData {
+export interface Map {
   version: number
   name: string
   sky: SkyConfig
@@ -57,6 +57,8 @@ export interface MapData {
   boxes: MapBox[]
   physics: PhysicsConfig
 }
+
+export type MapData = Map
 
 export interface PlayerState {
   x: number
@@ -68,7 +70,7 @@ export interface PlayerState {
   pitch: number
 }
 
-export interface MovementInput {
+export interface PlayerInput {
   seq?: number
   forward: boolean
   back: boolean

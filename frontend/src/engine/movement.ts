@@ -2,59 +2,25 @@
  * Pure deterministic movement simulation shared with backend MovementSystem.java.
  * No framework imports. One call to stepMovement() = one fixed simulation step (dt = 1 / tickRate).
  */
+import type {
+  BoundsConfig,
+  MapBox,
+  PhysicsConfig,
+  PlayerInput,
+  PlayerState,
+} from '../game/types'
 
-export interface MovementState {
-  x: number
-  y: number
-  z: number
-  vy: number
-  onGround: boolean
-}
-
-export interface StepInput {
-  forward: boolean
-  back: boolean
-  left: boolean
-  right: boolean
-  run: boolean
-  jump: boolean
-  yaw: number
-  pitch: number
-}
-
-export interface StepPhysics {
-  tickRate: number
-  gravity: number
-  walkSpeed: number
-  runSpeed: number
-  jumpSpeed: number
-  player: {
-    width: number
-    height: number
-    depth: number
-    eyeHeight: number
-  }
-}
-
+export type MovementState = Pick<
+  PlayerState,
+  'x' | 'y' | 'z' | 'vy' | 'onGround'
+>
+export type StepInput = Omit<PlayerInput, 'seq'>
+export type StepPhysics = PhysicsConfig
 export interface StepGround {
   y: number
 }
-
-export interface StepBounds {
-  minX: number
-  maxX: number
-  minZ: number
-  maxZ: number
-}
-
-export interface StepBox {
-  x: number
-  y: number
-  z: number
-  width: number
-  height: number
-  depth: number
-}
+export type StepBounds = BoundsConfig
+export type StepBox = Omit<MapBox, 'color'>
 
 const EPSILON = 1e-9
 

@@ -1,19 +1,20 @@
 import * as THREE from 'three'
-import { useGameStore } from '../store/useGameStore'
-import type { MapData } from '../types/game'
-import { stepMovement, type MovementState, type StepInput } from './movement'
 import type {
+  ClientMessage,
   ServerMessage,
   SnapshotMessage,
   WelcomeMessage,
-} from './protocol'
+} from '../game/protocol'
+import type { Map as GameMap } from '../game/types'
+import { useGameStore } from '../store/useGameStore'
+import { stepMovement, type MovementState, type StepInput } from './movement'
 
 const MOUSE_SENSITIVITY = 0.002
 const MAX_PITCH = (89 * Math.PI) / 180
 const INTERPOLATION_DELAY_MS = 100
 const MAX_ACCUMULATOR_STEPS = 5
 const PING_INTERVAL_MS = 1000
-const FAKE_LATENCY_STEPS = [0, 100, 200]
+const FAKE_LATENCY_STEPS = [0, 100, 200] as const
 
 interface PendingInput extends StepInput {
   seq: number
@@ -52,7 +53,7 @@ export function lerpAngle(a: number, b: number, t: number): number {
 
 export class GameEngine {
   private container: HTMLElement
-  private mapData: MapData
+  private mapData: GameMap
   private playerName: string
   private scene: THREE.Scene
   private camera: THREE.PerspectiveCamera
@@ -117,7 +118,7 @@ export class GameEngine {
   private lastInboundDeliverAt = 0
   private lastOutboundDeliverAt = 0
 
-  constructor(container: HTMLElement, mapData: MapData, playerName: string) {
+  constructor(container: HTMLElement, mapData: GameMap, playerName: string) {
     this.container = container
     this.mapData = mapData
     this.playerName = playerName
@@ -288,7 +289,7 @@ export class GameEngine {
     })
   }
 
-  private sendWithOptionalDelay(payload: Record<string, unknown>): void {
+  private sendWithOptionalDelay(payload: ClientMessage): void {
     const serialized = JSON.stringify(payload)
     const now = performance.now()
     const targetDeliverAt = Math.max(

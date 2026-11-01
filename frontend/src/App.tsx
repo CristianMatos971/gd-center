@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import './App.css'
 import { GameEngine } from './engine/GameEngine'
-import { useGameStore } from './store/useGameStore'
+import type { Map } from './game/types'
+import { useGameStore, type ConnectionStatus } from './store/useGameStore'
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<ConnectionStatus, string> = {
   connected: 'Conectado',
   connecting: 'Conectando...',
   disconnected: 'Desconectado',
@@ -27,11 +28,11 @@ export function App() {
   const setErrorMessage = useGameStore((s) => s.setErrorMessage)
   const resetToLogin = useGameStore((s) => s.resetToLogin)
 
-  const [isFetchingMap, setIsFetchingMap] = useState(false)
-  const containerRef = useRef(null)
-  const engineRef = useRef(null)
+  const [isFetchingMap, setIsFetchingMap] = useState<boolean>(false)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const engineRef = useRef<GameEngine | null>(null)
 
-  const handlePlay = async (e) => {
+  const handlePlay = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = playerName.trim()
     if (trimmed.length < 1 || trimmed.length > 16) {
@@ -47,7 +48,7 @@ export function App() {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
-      const data = await response.json()
+      const data = (await response.json()) as Map
       setPlayerName(trimmed)
       setMapData(data)
       setConnectionStatus('connecting')
@@ -160,7 +161,7 @@ export function App() {
             <div className="hud-item">
               <span className="hud-label">Status:</span>{' '}
               <span className={`status-badge status-${connectionStatus}`}>
-                {STATUS_LABELS[connectionStatus] || connectionStatus}
+                {STATUS_LABELS[connectionStatus]}
               </span>
             </div>
             <div className="hud-hint">F3: Debug | F4: Latência artificial</div>
