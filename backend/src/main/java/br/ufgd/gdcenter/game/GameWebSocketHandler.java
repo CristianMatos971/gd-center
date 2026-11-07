@@ -14,11 +14,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * WebSocket handler for /ws.
- * Wraps sessions in ConcurrentWebSocketSessionDecorator for thread-safe outbound sends,
- * parses inbound JSON text frames, sanitizes fields, and enqueues commands into GameLoopService.
- */
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
 

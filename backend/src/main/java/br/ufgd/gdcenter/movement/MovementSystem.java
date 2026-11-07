@@ -3,10 +3,6 @@ package br.ufgd.gdcenter.movement;
 import br.ufgd.gdcenter.map.MapData;
 import java.util.List;
 
-/**
- * Pure deterministic movement simulation shared conceptually with frontend/src/engine/movement.ts.
- * No framework imports. One call to step() = one fixed simulation step (dt = 1.0 / tickRate).
- */
 public final class MovementSystem {
 
     private static final double EPSILON = 1e-9;
@@ -42,8 +38,6 @@ public final class MovementSystem {
         double vy = state.vy();
         boolean onGround = state.onGround();
 
-        // 1. Horizontal direction = (forward - back) * forwardVector + (right - left) * rightVector.
-        // forward = (-sin(yaw), 0, -cos(yaw)), right = (cos(yaw), 0, -sin(yaw)).
         double forwardAxis = (input.forward() ? 1.0 : 0.0) - (input.back() ? 1.0 : 0.0);
         double rightAxis = (input.right() ? 1.0 : 0.0) - (input.left() ? 1.0 : 0.0);
 
@@ -67,13 +61,11 @@ public final class MovementSystem {
         double vx = dirX * speed;
         double vz = dirZ * speed;
 
-        // 2. Jump
         if (input.jump() && onGround) {
             vy = physics.jumpSpeed();
             onGround = false;
         }
 
-        // 3. Gravity (applied every step, even when standing)
         vy -= physics.gravity() * dt;
 
         double halfW = physics.player().width() * 0.5;
@@ -82,7 +74,6 @@ public final class MovementSystem {
 
         List<MapData.MapBox> boxList = boxes != null ? boxes : List.of();
 
-        // 4a. Move X by vx * dt and resolve box overlaps along X
         x += vx * dt;
         if (vx != 0.0) {
             for (MapData.MapBox box : boxList) {
@@ -98,7 +89,6 @@ public final class MovementSystem {
             }
         }
 
-        // 4b. Move Z by vz * dt and resolve box overlaps along Z
         z += vz * dt;
         if (vz != 0.0) {
             for (MapData.MapBox box : boxList) {
@@ -114,7 +104,6 @@ public final class MovementSystem {
             }
         }
 
-        // 4c. Move Y: set onGround = false, move y by vy * dt, resolve vertical overlaps
         onGround = false;
         y += vy * dt;
         for (MapData.MapBox box : boxList) {
@@ -132,14 +121,12 @@ public final class MovementSystem {
             }
         }
 
-        // 5. Ground plane
         if (y <= ground.y()) {
             y = ground.y();
             vy = 0.0;
             onGround = true;
         }
 
-        // 6. Clamp x and z inside bounds, shrunk by half the player width
         double minX = bounds.minX() + halfW;
         double maxX = bounds.maxX() - halfW;
         double minZ = bounds.minZ() + halfD;

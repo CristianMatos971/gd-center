@@ -2,10 +2,6 @@ package br.ufgd.gdcenter.game;
 
 import java.util.List;
 
-/**
- * Outbound and inbound WebSocket protocol records.
- * Every outbound record includes a "type" field.
- */
 public final class ProtocolMessages {
 
     private ProtocolMessages() {}

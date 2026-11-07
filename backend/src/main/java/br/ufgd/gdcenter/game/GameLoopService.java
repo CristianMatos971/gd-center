@@ -25,11 +25,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Authoritative 60 Hz game loop running on a single ScheduledExecutorService thread.
- * All game state mutations (joins, leaves, input draining, movement stepping, snapshots)
- * happen exclusively on this thread so no locks are needed around player state.
- */
 @Service
 public class GameLoopService {
 
@@ -61,9 +56,8 @@ public class GameLoopService {
     private final ObjectMapper objectMapper;
     private final ConcurrentLinkedQueue<LoopCommand> commandQueue = new ConcurrentLinkedQueue<>();
 
-    // Owned exclusively by the game loop thread:
     private final Map<String, PlayerSessionState> playersBySessionId = new LinkedHashMap<>();
-    private final Map<String, String> activeNamesLower = new LinkedHashMap<>(); // lowerName -> sessionId
+    private final Map<String, String> activeNamesLower = new LinkedHashMap<>();
     private long currentTick = 0L;
     private int nextSpawnIndex = 0;
 
@@ -147,7 +141,6 @@ public class GameLoopService {
     private void tick() {
         currentTick++;
 
-        // 1. Drain all enqueued network commands (joins, leaves, inputs)
         LoopCommand cmd;
         while ((cmd = commandQueue.poll()) != null) {
             switch (cmd) {
@@ -157,7 +150,6 @@ public class GameLoopService {
             }
         }
 
-        // 2. Drain up to 8 inputs per player; each input advances simulation by 1 fixed step
         MapData map = mapService.getMapData();
         for (PlayerSessionState player : playersBySessionId.values()) {
             for (int i = 0; i < MAX_INPUTS_PER_TICK; i++) {
@@ -177,7 +169,6 @@ public class GameLoopService {
             }
         }
 
-        // 3. Every 3rd tick (20 Hz), broadcast a full-precision snapshot to all joined players
         if (currentTick % SNAPSHOT_INTERVAL_TICKS == 0 && !playersBySessionId.isEmpty()) {
             broadcastSnapshot();
         }
@@ -231,7 +222,6 @@ public class GameLoopService {
             allPlayers.add(existing.toSummaryPayload());
         }
 
-        // Send welcome to the newly joined player
         ProtocolMessages.WelcomeMessage welcome = new ProtocolMessages.WelcomeMessage(
                 playerId,
                 tickRate,
@@ -241,7 +231,6 @@ public class GameLoopService {
         );
         sendJson(session, welcome);
 
-        // Broadcast player_joined to all OTHER connected players
         ProtocolMessages.PlayerJoinedMessage joinedMsg = new ProtocolMessages.PlayerJoinedMessage(
                 playerId,
                 trimmed,
@@ -262,7 +251,6 @@ public class GameLoopService {
         if (player == null) {
             return;
         }
-        // Sanitize numbers: ignore NaN/Infinity, clamp pitch to +-89 degrees
         if (!Double.isFinite(cmd.yaw()) || !Double.isFinite(cmd.pitch()) || cmd.seq() <= 0) {
             return;
         }

@@ -6,9 +6,6 @@ import org.springframework.web.socket.WebSocketSession;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/**
- * Mutable per-player state owned exclusively by the single-threaded GameLoop.
- */
 public class PlayerSessionState {
 
     public static final int MAX_INPUT_QUEUE_SIZE = 120;
@@ -53,7 +50,6 @@ public class PlayerSessionState {
 
     public void enqueueInput(QueuedInput queuedInput) {
         if (inputQueue.size() >= MAX_INPUT_QUEUE_SIZE) {
-            // Drop the oldest input when the queue is full
             inputQueue.pollFirst();
         }
         inputQueue.addLast(queuedInput);
