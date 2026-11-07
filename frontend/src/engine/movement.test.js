@@ -2,31 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { lerpAngle } from './GameEngine'
-import {
-  stepMovement,
-  type MovementState,
-  type StepBounds,
-  type StepBox,
-  type StepGround,
-  type StepInput,
-  type StepPhysics,
-} from './movement'
-
-interface GoldenScenario {
-  name: string
-  description: string
-  physics: StepPhysics
-  ground: StepGround
-  bounds: StepBounds
-  boxes: StepBox[]
-  initialState: MovementState
-  inputs: StepInput[]
-  expectedFinalState: MovementState
-}
-
-interface GoldenFile {
-  scenarios: GoldenScenario[]
-}
+import { stepMovement } from './movement'
 
 describe('stepMovement golden vectors', () => {
   const vectorsPath = path.resolve(
@@ -34,7 +10,7 @@ describe('stepMovement golden vectors', () => {
     '../../../shared/movement-vectors.json'
   )
   const raw = fs.readFileSync(vectorsPath, 'utf-8')
-  const golden: GoldenFile = JSON.parse(raw)
+  const golden = JSON.parse(raw)
 
   it('has at least 8 golden scenarios', () => {
     expect(golden.scenarios.length).toBeGreaterThanOrEqual(8)
@@ -67,7 +43,6 @@ describe('stepMovement golden vectors', () => {
     const a = Math.PI - 0.1
     const b = -Math.PI + 0.1
     const mid = lerpAngle(a, b, 0.5)
-    // Midpoint across PI should have |cos(mid)| close to 1 (near +-PI), not 0
     expect(Math.abs(Math.cos(mid))).toBeGreaterThan(0.99)
   })
 })

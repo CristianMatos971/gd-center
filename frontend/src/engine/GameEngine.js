@@ -1,12 +1,6 @@
 import * as THREE from 'three'
 import { useGameStore } from '../store/useGameStore'
-import type { MapData } from '../types/game'
-import { stepMovement, type MovementState, type StepInput } from './movement'
-import type {
-  ServerMessage,
-  SnapshotMessage,
-  WelcomeMessage,
-} from './protocol'
+import { stepMovement } from './movement'
 
 const MOUSE_SENSITIVITY = 0.002
 const MAX_PITCH = (89 * Math.PI) / 180
@@ -15,34 +9,7 @@ const MAX_ACCUMULATOR_STEPS = 5
 const PING_INTERVAL_MS = 1000
 const FAKE_LATENCY_STEPS = [0, 100, 200]
 
-interface PendingInput extends StepInput {
-  seq: number
-}
-
-interface RemoteSample {
-  timestamp: number
-  x: number
-  y: number
-  z: number
-  yaw: number
-  pitch: number
-}
-
-interface RemotePlayerEntity {
-  id: string
-  name: string
-  group: THREE.Group
-  boxMesh: THREE.Mesh
-  labelSprite: THREE.Sprite
-  samples: RemoteSample[]
-}
-
-/**
- * Shortest-angle interpolation on a circle (radians).
- * Wraps the difference into [-PI, PI] so turning across the -PI/+PI boundary
- * takes the short arc instead of spinning 350 degrees the wrong way.
- */
-export function lerpAngle(a: number, b: number, t: number): number {
+export function lerpAngle(a, b, t) {
   let diff = ((b - a + Math.PI) % (2 * Math.PI)) - Math.PI
   if (diff < -Math.PI) {
     diff += 2 * Math.PI
@@ -51,82 +18,66 @@ export function lerpAngle(a: number, b: number, t: number): number {
 }
 
 export class GameEngine {
-  private container: HTMLElement
-  private mapData: MapData
-  private playerName: string
-  private scene: THREE.Scene
-  private camera: THREE.PerspectiveCamera
-  private renderer: THREE.WebGLRenderer
-  private ws: WebSocket | null = null
-  private animationFrameId: number | null = null
-  private pingTimerId: number | null = null
-  private activeTimeouts = new Set<number>()
-  private isDisposed = false
-  private hasWelcomed = false
-
-  // Local player orientation (updated immediately on mousemove)
-  private yaw = 0
-  private pitch = 0
-
-  // Local player prediction & interpolation states (feet position)
-  private prevState: MovementState = {
-    x: 0,
-    y: 0,
-    z: 0,
-    vy: 0,
-    onGround: true,
-  }
-  private currState: MovementState = {
-    x: 0,
-    y: 0,
-    z: 0,
-    vy: 0,
-    onGround: true,
-  }
-
-  // Fixed-timestep accumulator and input sequencing
-  private seq = 0
-  private accumulator = 0
-  private lastFrameTime = 0
-  private pendingInputs: PendingInput[] = []
-
-  // Keyboard state tracked by physical key code
-  private keys = {
-    KeyW: false,
-    KeyA: false,
-    KeyS: false,
-    KeyD: false,
-    ShiftLeft: false,
-    Space: false,
-  }
-
-  // Remote players indexed by id
-  private remotePlayers = new Map<string, RemotePlayerEntity>()
-  private playerBoxGeometry: THREE.BoxGeometry
-  private playerBoxMaterial: THREE.MeshLambertMaterial
-
-  // Diagnostics & fake latency
-  private fakeLatencyIndex = 0
-  private fakeLatencyMs = 0
-  private lastCorrectionDistance = 0
-  private latestServerTick = 0
-  private latestRtt = 0
-  private frameCount = 0
-  private fpsWindowStart = 0
-  private currentFps = 0
-  private lastInboundDeliverAt = 0
-  private lastOutboundDeliverAt = 0
-
-  constructor(container: HTMLElement, mapData: MapData, playerName: string) {
+  constructor(container, mapData, playerName) {
     this.container = container
     this.mapData = mapData
     this.playerName = playerName
+    this.ws = null
+    this.animationFrameId = null
+    this.pingTimerId = null
+    this.activeTimeouts = new Set()
+    this.isDisposed = false
+    this.hasWelcomed = false
+
+    this.yaw = 0
+    this.pitch = 0
+
+    this.prevState = {
+      x: 0,
+      y: 0,
+      z: 0,
+      vy: 0,
+      onGround: true,
+    }
+    this.currState = {
+      x: 0,
+      y: 0,
+      z: 0,
+      vy: 0,
+      onGround: true,
+    }
+
+    this.seq = 0
+    this.accumulator = 0
+    this.lastFrameTime = 0
+    this.pendingInputs = []
+
+    this.keys = {
+      KeyW: false,
+      KeyA: false,
+      KeyS: false,
+      KeyD: false,
+      ShiftLeft: false,
+      Space: false,
+    }
+
+    this.remotePlayers = new Map()
+
+    this.fakeLatencyIndex = 0
+    this.fakeLatencyMs = 0
+    this.lastCorrectionDistance = 0
+    this.latestServerTick = 0
+    this.latestRtt = 0
+    this.frameCount = 0
+    this.fpsWindowStart = 0
+    this.currentFps = 0
+    this.lastInboundDeliverAt = 0
+    this.lastOutboundDeliverAt = 0
 
     const { width, height, depth } = mapData.physics.player
     this.playerBoxGeometry = new THREE.BoxGeometry(width, height, depth)
     this.playerBoxMaterial = new THREE.MeshLambertMaterial({ color: 0xe53935 })
 
-    // 1. Setup Three.js scene
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(mapData.sky.color)
 
@@ -160,15 +111,7 @@ export class GameEngine {
     this.startLoop()
   }
 
-  private setLocalStateImmediate(
-    x: number,
-    y: number,
-    z: number,
-    vy: number,
-    onGround: boolean,
-    yaw: number,
-    pitch: number
-  ): void {
+  setLocalStateImmediate(x, y, z, vy, onGround, yaw, pitch) {
     this.prevState = { x, y, z, vy, onGround }
     this.currState = { x, y, z, vy, onGround }
     this.yaw = yaw
@@ -176,7 +119,7 @@ export class GameEngine {
     this.updateCameraTransform(1.0)
   }
 
-  private buildEnvironment(): void {
+  buildEnvironment() {
     const { bounds, ground, boxes } = this.mapData
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.65)
@@ -218,7 +161,7 @@ export class GameEngine {
     }
   }
 
-  private connectWebSocket(): void {
+  connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/ws`
     const ws = new WebSocket(wsUrl)
@@ -241,9 +184,9 @@ export class GameEngine {
     ws.addEventListener('message', (event) => {
       if (this.isDisposed) return
       const raw = String(event.data)
-      let parsed: ServerMessage
+      let parsed
       try {
-        parsed = JSON.parse(raw) as ServerMessage
+        parsed = JSON.parse(raw)
       } catch {
         return
       }
@@ -288,7 +231,7 @@ export class GameEngine {
     })
   }
 
-  private sendWithOptionalDelay(payload: Record<string, unknown>): void {
+  sendWithOptionalDelay(payload) {
     const serialized = JSON.stringify(payload)
     const now = performance.now()
     const targetDeliverAt = Math.max(
@@ -311,7 +254,7 @@ export class GameEngine {
     }
   }
 
-  private handleServerMessage(msg: ServerMessage): void {
+  handleServerMessage(msg) {
     const store = useGameStore.getState()
 
     switch (msg.type) {
@@ -354,14 +297,14 @@ export class GameEngine {
     }
   }
 
-  private handleWelcome(msg: WelcomeMessage): void {
+  handleWelcome(msg) {
     this.hasWelcomed = true
     const store = useGameStore.getState()
     store.setPlayerId(msg.playerId)
     store.setConnectionStatus('connected')
     store.setScreen('playing')
 
-    const playersMap: Record<string, string> = {}
+    const playersMap = {}
     for (const p of msg.players) {
       playersMap[p.id] = p.name
       if (p.id !== msg.playerId) {
@@ -390,14 +333,7 @@ export class GameEngine {
     this.fpsWindowStart = this.lastFrameTime
   }
 
-  /**
-   * Server Reconciliation (local player) + Snapshot Buffering (remote players).
-   * Why: Because the client predicts movement immediately, the server's snapshot arrives
-   * in the past (at sequence `entry.seq`). We reset to the authoritative server position at
-   * `entry.seq`, discard already-acknowledged inputs (`<= entry.seq`), and replay all unacknowledged
-   * inputs (`> entry.seq`) through `stepMovement` to bring the predicted state back to the present.
-   */
-  private handleSnapshot(snapshot: SnapshotMessage): void {
+  handleSnapshot(snapshot) {
     this.latestServerTick = snapshot.tick
     const localId = useGameStore.getState().playerId
     const now = performance.now()
@@ -408,11 +344,11 @@ export class GameEngine {
         const beforeY = this.currState.y
         const beforeZ = this.currState.z
 
-        // 1. Drop acknowledged inputs with seq <= entry.seq
-        this.pendingInputs = this.pendingInputs.filter((inp) => inp.seq > entry.seq)
+        this.pendingInputs = this.pendingInputs.filter(
+          (inp) => inp.seq > entry.seq
+        )
 
-        // 2. Start from authoritative server state and replay remaining pending inputs
-        let reconciled: MovementState = {
+        let reconciled = {
           x: entry.x,
           y: entry.y,
           z: entry.z,
@@ -437,7 +373,6 @@ export class GameEngine {
         this.lastCorrectionDistance = Math.hypot(dx, dy, dz)
 
         this.currState = reconciled
-        // Keep prevState aligned if a noticeable snap happened so camera doesn't jitter backward
         if (this.lastCorrectionDistance > 0.001) {
           this.prevState = { ...reconciled }
         }
@@ -456,7 +391,7 @@ export class GameEngine {
     }
   }
 
-  private createNameSprite(name: string): THREE.Sprite {
+  createNameSprite(name) {
     const canvas = document.createElement('canvas')
     canvas.width = 256
     canvas.height = 64
@@ -492,16 +427,11 @@ export class GameEngine {
     return sprite
   }
 
-  private upsertRemotePlayer(
-    id: string,
-    name: string,
-    sample: RemoteSample
-  ): void {
+  upsertRemotePlayer(id, name, sample) {
     let entity = this.remotePlayers.get(id)
     if (!entity) {
       const group = new THREE.Group()
 
-      // Remote player box: bottom at feet (y=0 inside group), so mesh center is at +height/2
       const boxMesh = new THREE.Mesh(
         this.playerBoxGeometry,
         this.playerBoxMaterial
@@ -533,7 +463,7 @@ export class GameEngine {
     }
   }
 
-  private removeRemotePlayer(id: string): void {
+  removeRemotePlayer(id) {
     const entity = this.remotePlayers.get(id)
     if (!entity) return
     this.scene.remove(entity.group)
@@ -543,21 +473,13 @@ export class GameEngine {
     this.remotePlayers.delete(id)
   }
 
-  /**
-   * Remote Player Entity Interpolation (render at now - 100 ms).
-   * Why: Snapshots arrive every 50 ms (20 Hz) with network jitter. By rendering remote players
-   * 100 ms in the past, we almost always have two bracketing snapshots (s0 <= renderTime <= s1)
-   * and can smoothly linearly interpolate (lerp) position and shortest-angle yaw between them.
-   * If no newer snapshot exists yet, we hold the last known state (no extrapolation).
-   */
-  private updateRemotePlayers(now: number): void {
+  updateRemotePlayers(now) {
     const renderTime = now - INTERPOLATION_DELAY_MS
 
     for (const entity of this.remotePlayers.values()) {
       const samples = entity.samples
       if (samples.length === 0) continue
 
-      // Drop old samples that are no longer needed, keeping at least one before renderTime
       while (samples.length >= 2 && samples[1].timestamp <= renderTime) {
         samples.shift()
       }
@@ -570,7 +492,6 @@ export class GameEngine {
         const s0 = samples[0]
         const s1 = samples[1]
         if (renderTime >= s1.timestamp) {
-          // Hold last known state (no extrapolation)
           const last = samples[samples.length - 1]
           entity.group.position.set(last.x, last.y, last.z)
           entity.group.rotation.y = last.yaw
@@ -588,16 +509,10 @@ export class GameEngine {
     }
   }
 
-  /**
-   * Fixed 60 Hz client-side prediction loop driven by requestAnimationFrame.
-   * Accumulates frame delta time and runs discrete dt = 1/60s steps (capped at 5 per frame).
-   * Between fixed steps, camera position is interpolated using `alpha = accumulator / fixedDt`
-   * so high-refresh monitors (e.g. 144 Hz) render completely smooth motion.
-   */
-  private startLoop(): void {
+  startLoop() {
     const fixedDt = 1.0 / this.mapData.physics.tickRate
 
-    const frame = (now: number) => {
+    const frame = (now) => {
       if (this.isDisposed) return
       this.animationFrameId = requestAnimationFrame(frame)
 
@@ -629,7 +544,6 @@ export class GameEngine {
 
       this.renderer.render(this.scene, this.camera)
 
-      // Update FPS and HUD debug stats twice a second
       this.frameCount++
       const fpsElapsed = now - this.fpsWindowStart
       if (fpsElapsed >= 500) {
@@ -651,11 +565,11 @@ export class GameEngine {
     this.animationFrameId = requestAnimationFrame(frame)
   }
 
-  private runFixedPredictionStep(): void {
+  runFixedPredictionStep() {
     const locked = document.pointerLockElement === this.renderer.domElement
 
     this.seq += 1
-    const stepInput: PendingInput = {
+    const stepInput = {
       seq: this.seq,
       forward: locked ? this.keys.KeyW : false,
       back: locked ? this.keys.KeyS : false,
@@ -696,7 +610,7 @@ export class GameEngine {
     })
   }
 
-  private updateCameraTransform(alpha: number): void {
+  updateCameraTransform(alpha) {
     const eyeHeight = this.mapData.physics.player.eyeHeight
     const interpX =
       this.prevState.x + (this.currState.x - this.prevState.x) * alpha
@@ -710,7 +624,7 @@ export class GameEngine {
     this.camera.rotation.x = this.pitch
   }
 
-  private clearKeys(): void {
+  clearKeys() {
     this.keys.KeyW = false
     this.keys.KeyA = false
     this.keys.KeyS = false
@@ -719,13 +633,13 @@ export class GameEngine {
     this.keys.Space = false
   }
 
-  private onCanvasClick = (): void => {
+  onCanvasClick = () => {
     if (document.pointerLockElement !== this.renderer.domElement) {
       this.renderer.domElement.requestPointerLock?.()
     }
   }
 
-  private onPointerLockChange = (): void => {
+  onPointerLockChange = () => {
     const locked = document.pointerLockElement === this.renderer.domElement
     if (!locked) {
       this.clearKeys()
@@ -733,7 +647,7 @@ export class GameEngine {
     useGameStore.getState().setPointerLocked(locked)
   }
 
-  private onMouseMove = (e: MouseEvent): void => {
+  onMouseMove = (e) => {
     if (document.pointerLockElement !== this.renderer.domElement) return
     this.yaw -= e.movementX * MOUSE_SENSITIVITY
     this.pitch = Math.max(
@@ -744,7 +658,7 @@ export class GameEngine {
     this.camera.rotation.x = this.pitch
   }
 
-  private onKeyDown = (e: KeyboardEvent): void => {
+  onKeyDown = (e) => {
     if (e.code === 'F3') {
       e.preventDefault()
       useGameStore.getState().toggleDebugVisible()
@@ -767,17 +681,17 @@ export class GameEngine {
       if (e.code === 'Space') {
         e.preventDefault()
       }
-      this.keys[e.code as keyof typeof this.keys] = true
+      this.keys[e.code] = true
     }
   }
 
-  private onKeyUp = (e: KeyboardEvent): void => {
+  onKeyUp = (e) => {
     if (e.code in this.keys) {
-      this.keys[e.code as keyof typeof this.keys] = false
+      this.keys[e.code] = false
     }
   }
 
-  private onVisibilityChange = (): void => {
+  onVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
       this.accumulator = 0
       this.lastFrameTime = performance.now()
@@ -786,11 +700,11 @@ export class GameEngine {
     }
   }
 
-  private onWindowBlur = (): void => {
+  onWindowBlur = () => {
     this.clearKeys()
   }
 
-  private onResize = (): void => {
+  onResize = () => {
     if (this.isDisposed) return
     const w = this.container.clientWidth
     const h = Math.max(1, this.container.clientHeight)
@@ -799,7 +713,7 @@ export class GameEngine {
     this.renderer.setSize(w, h)
   }
 
-  private attachListeners(): void {
+  attachListeners() {
     this.renderer.domElement.addEventListener('click', this.onCanvasClick)
     document.addEventListener('pointerlockchange', this.onPointerLockChange)
     document.addEventListener('mousemove', this.onMouseMove)
@@ -810,13 +724,13 @@ export class GameEngine {
     window.addEventListener('resize', this.onResize)
   }
 
-  public requestPointerLock(): void {
+  requestPointerLock() {
     if (document.pointerLockElement !== this.renderer.domElement) {
       this.renderer.domElement.requestPointerLock?.()
     }
   }
 
-  public dispose(): void {
+  dispose() {
     if (this.isDisposed) return
     this.isDisposed = true
 

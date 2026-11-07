@@ -1,37 +1,6 @@
 import { create } from 'zustand'
-import type { DebugStats, MapData } from '../types/game'
 
-export type ScreenState = 'login' | 'connecting' | 'playing' | 'error'
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
-
-interface GameUIState {
-  screen: ScreenState
-  playerName: string
-  playerId: string | null
-  mapData: MapData | null
-  connectionStatus: ConnectionStatus
-  errorMessage: string | null
-  pointerLocked: boolean
-  onlinePlayers: Record<string, string> // id -> name
-  debugVisible: boolean
-  debugStats: DebugStats
-
-  setPlayerName: (name: string) => void
-  setScreen: (screen: ScreenState) => void
-  setMapData: (map: MapData | null) => void
-  setConnectionStatus: (status: ConnectionStatus) => void
-  setErrorMessage: (msg: string | null) => void
-  setPointerLocked: (locked: boolean) => void
-  setPlayerId: (id: string | null) => void
-  setOnlinePlayers: (players: Record<string, string>) => void
-  upsertOnlinePlayer: (id: string, name: string) => void
-  removeOnlinePlayer: (id: string) => void
-  toggleDebugVisible: () => void
-  updateDebugStats: (partial: Partial<DebugStats>) => void
-  resetToLogin: (errorMessage?: string | null) => void
-}
-
-const initialDebugStats: DebugStats = {
+const initialDebugStats = {
   rtt: 0,
   pendingInputs: 0,
   lastCorrectionDistance: 0,
@@ -40,7 +9,7 @@ const initialDebugStats: DebugStats = {
   fakeLatencyMs: 0,
 }
 
-export const useGameStore = create<GameUIState>((set) => ({
+export const useGameStore = create((set) => ({
   screen: 'login',
   playerName: '',
   playerId: null,

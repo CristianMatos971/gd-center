@@ -61,8 +61,6 @@ export function App() {
     }
   }
 
-  // Single lifecycle effect for GameEngine: stays mounted across 'connecting' -> 'playing'
-  // and cleanly tears down on unmount, error, or return to login (StrictMode-safe).
   const isEngineActive = screen === 'connecting' || screen === 'playing'
 
   useEffect(() => {
@@ -135,7 +133,6 @@ export function App() {
     <div className="game-wrapper">
       <div ref={containerRef} className="game-canvas-container" />
 
-      {/* Connecting modal while waiting for server welcome */}
       {screen === 'connecting' && (
         <div className="pointer-overlay">
           <div className="pointer-overlay-box">
@@ -145,7 +142,6 @@ export function App() {
         </div>
       )}
 
-      {/* Active game HUD and overlays */}
       {screen === 'playing' && (
         <>
           <div className="hud-top-left">
@@ -183,10 +179,8 @@ export function App() {
             </div>
           )}
 
-          {/* Center crosshair dot */}
           <div className="crosshair" />
 
-          {/* Pointer lock overlay */}
           {!pointerLocked && (
             <div
               className="pointer-overlay"

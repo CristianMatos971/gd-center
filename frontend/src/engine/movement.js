@@ -1,71 +1,6 @@
-/**
- * Pure deterministic movement simulation shared with backend MovementSystem.java.
- * No framework imports. One call to stepMovement() = one fixed simulation step (dt = 1 / tickRate).
- */
-
-export interface MovementState {
-  x: number
-  y: number
-  z: number
-  vy: number
-  onGround: boolean
-}
-
-export interface StepInput {
-  forward: boolean
-  back: boolean
-  left: boolean
-  right: boolean
-  run: boolean
-  jump: boolean
-  yaw: number
-  pitch: number
-}
-
-export interface StepPhysics {
-  tickRate: number
-  gravity: number
-  walkSpeed: number
-  runSpeed: number
-  jumpSpeed: number
-  player: {
-    width: number
-    height: number
-    depth: number
-    eyeHeight: number
-  }
-}
-
-export interface StepGround {
-  y: number
-}
-
-export interface StepBounds {
-  minX: number
-  maxX: number
-  minZ: number
-  maxZ: number
-}
-
-export interface StepBox {
-  x: number
-  y: number
-  z: number
-  width: number
-  height: number
-  depth: number
-}
-
 const EPSILON = 1e-9
 
-export function stepMovement(
-  state: MovementState,
-  input: StepInput,
-  physics: StepPhysics,
-  ground: StepGround,
-  bounds: StepBounds,
-  boxes: StepBox[] = []
-): MovementState {
+export function stepMovement(state, input, physics, ground, bounds, boxes = []) {
   const dt = 1.0 / physics.tickRate
 
   let x = state.x
@@ -74,8 +9,6 @@ export function stepMovement(
   let vy = state.vy
   let onGround = state.onGround
 
-  // 1. Horizontal direction = (forward - back) * forwardVector + (right - left) * rightVector.
-  // forward = (-sin(yaw), 0, -cos(yaw)), right = (cos(yaw), 0, -sin(yaw)).
   const forwardAxis = (input.forward ? 1.0 : 0.0) - (input.back ? 1.0 : 0.0)
   const rightAxis = (input.right ? 1.0 : 0.0) - (input.left ? 1.0 : 0.0)
 
@@ -99,20 +32,17 @@ export function stepMovement(
   const vx = dirX * speed
   const vz = dirZ * speed
 
-  // 2. Jump
   if (input.jump && onGround) {
     vy = physics.jumpSpeed
     onGround = false
   }
 
-  // 3. Gravity (applied every step, even when standing)
   vy -= physics.gravity * dt
 
   const halfW = physics.player.width * 0.5
   const halfD = physics.player.depth * 0.5
   const playerH = physics.player.height
 
-  // 4a. Move X by vx * dt and resolve box overlaps along X
   x += vx * dt
   if (vx !== 0.0) {
     for (const box of boxes) {
@@ -128,7 +58,6 @@ export function stepMovement(
     }
   }
 
-  // 4b. Move Z by vz * dt and resolve box overlaps along Z
   z += vz * dt
   if (vz !== 0.0) {
     for (const box of boxes) {
@@ -144,7 +73,6 @@ export function stepMovement(
     }
   }
 
-  // 4c. Move Y: set onGround = false, move y by vy * dt, resolve vertical overlaps
   onGround = false
   y += vy * dt
   for (const box of boxes) {
@@ -162,14 +90,12 @@ export function stepMovement(
     }
   }
 
-  // 5. Ground plane
   if (y <= ground.y) {
     y = ground.y
     vy = 0.0
     onGround = true
   }
 
-  // 6. Clamp x and z inside bounds, shrunk by half the player width
   const minX = bounds.minX + halfW
   const maxX = bounds.maxX - halfW
   const minZ = bounds.minZ + halfD
@@ -183,15 +109,7 @@ export function stepMovement(
   return { x, y, z, vy, onGround }
 }
 
-function overlaps(
-  px: number,
-  py: number,
-  pz: number,
-  halfW: number,
-  playerH: number,
-  halfD: number,
-  box: StepBox
-): boolean {
+function overlaps(px, py, pz, halfW, playerH, halfD, box) {
   const pMinX = px - halfW
   const pMaxX = px + halfW
   const pMinY = py
