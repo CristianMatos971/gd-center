@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { DebugStats, Map } from '../game/types'
+import type { DebugStats, MapData } from '../types/game'
 
 export type ScreenState = 'login' | 'connecting' | 'playing' | 'error'
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
@@ -8,7 +8,7 @@ interface GameUIState {
   screen: ScreenState
   playerName: string
   playerId: string | null
-  mapData: Map | null
+  mapData: MapData | null
   connectionStatus: ConnectionStatus
   errorMessage: string | null
   pointerLocked: boolean
@@ -18,7 +18,7 @@ interface GameUIState {
 
   setPlayerName: (name: string) => void
   setScreen: (screen: ScreenState) => void
-  setMapData: (map: Map | null) => void
+  setMapData: (map: MapData | null) => void
   setConnectionStatus: (status: ConnectionStatus) => void
   setErrorMessage: (msg: string | null) => void
   setPointerLocked: (locked: boolean) => void
