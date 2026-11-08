@@ -22,9 +22,12 @@ export class LocalPlayerController {
     this.currState = { x, y, z, vy, onGround }
   }
 
-  stepPrediction(inputManager) {
+  stepPrediction(rawSample, colliders) {
     this.seq += 1
-    const stepInput = inputManager.sampleInput(this.seq)
+    const stepInput = {
+      ...rawSample,
+      seq: this.seq,
+    }
 
     this.pendingInputs.push(stepInput)
     if (this.pendingInputs.length > MAX_PENDING_INPUTS) {
@@ -38,13 +41,13 @@ export class LocalPlayerController {
       this.mapData.physics,
       this.mapData.ground,
       this.mapData.bounds,
-      []
+      colliders
     )
 
     return stepInput
   }
 
-  reconcile(serverEntry) {
+  reconcile(serverEntry, colliders) {
     const beforeX = this.currState.x
     const beforeY = this.currState.y
     const beforeZ = this.currState.z
@@ -68,7 +71,7 @@ export class LocalPlayerController {
         this.mapData.physics,
         this.mapData.ground,
         this.mapData.bounds,
-        []
+        colliders
       )
     }
 
@@ -83,16 +86,21 @@ export class LocalPlayerController {
     }
   }
 
-  updateCamera(camera, yaw, pitch, alpha) {
+  getInterpolatedEyePosition(alpha) {
     const eyeHeight = this.mapData.physics.player.eyeHeight
-    const interpX =
-      this.prevState.x + (this.currState.x - this.prevState.x) * alpha
-    const interpY =
-      this.prevState.y + (this.currState.y - this.prevState.y) * alpha
-    const interpZ =
-      this.prevState.z + (this.currState.z - this.prevState.z) * alpha
+    return {
+      x: this.prevState.x + (this.currState.x - this.prevState.x) * alpha,
+      y:
+        this.prevState.y +
+        (this.currState.y - this.prevState.y) * alpha +
+        eyeHeight,
+      z: this.prevState.z + (this.currState.z - this.prevState.z) * alpha,
+    }
+  }
 
-    camera.position.set(interpX, interpY + eyeHeight, interpZ)
+  updateCamera(camera, yaw, pitch, alpha) {
+    const pos = this.getInterpolatedEyePosition(alpha)
+    camera.position.set(pos.x, pos.y, pos.z)
     camera.rotation.y = yaw
     camera.rotation.x = pitch
   }

@@ -118,6 +118,41 @@ export class NetworkClient {
     })
   }
 
+  sendBuildPlace(payload) {
+    this.send({
+      type: 'build_place',
+      kind: payload.kind,
+      x: payload.x,
+      y: payload.y,
+      z: payload.z,
+      width: payload.width,
+      height: payload.height,
+      depth: payload.depth,
+      color: payload.color,
+    })
+  }
+
+  sendBuildUpdate(payload) {
+    this.send({
+      type: 'build_update',
+      id: payload.id,
+      x: payload.x,
+      y: payload.y,
+      z: payload.z,
+      width: payload.width,
+      height: payload.height,
+      depth: payload.depth,
+      color: payload.color,
+    })
+  }
+
+  sendBuildRemove(id) {
+    this.send({
+      type: 'build_remove',
+      id,
+    })
+  }
+
   cycleFakeLatency() {
     this.fakeLatencyIndex =
       (this.fakeLatencyIndex + 1) % FAKE_LATENCY_STEPS.length
@@ -139,6 +174,12 @@ export class NetworkClient {
         break
       case 'snapshot':
         this.handlers.onSnapshot?.(msg)
+        break
+      case 'structures_update':
+        this.handlers.onStructuresUpdate?.(msg)
+        break
+      case 'build_rejected':
+        this.handlers.onBuildRejected?.(msg)
         break
       case 'pong':
         if (typeof msg.t === 'number') {

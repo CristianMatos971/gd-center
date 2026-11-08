@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/useGameStore'
 import { LocalPlayerController } from './entities/LocalPlayerController'
 import { RemotePlayerManager } from './entities/RemotePlayerManager'
+import { StructureManager } from './entities/StructureManager'
 import { InputManager } from './input/InputManager'
 import { NetworkClient } from './network/NetworkClient'
 import { SceneManager } from './scene/SceneManager'
@@ -22,8 +23,9 @@ export class GameEngine {
     this.currentFps = 0
 
     this.sceneManager = new SceneManager(container, mapData.sky.color)
-    WorldBuilder.build(this.sceneManager.scene, mapData)
+    this.groundMesh = WorldBuilder.build(this.sceneManager.scene, mapData)
 
+    this.structureManager = new StructureManager(this.sceneManager.scene)
     this.localPlayer = new LocalPlayerController(mapData)
     this.remotePlayers = new RemotePlayerManager(
       this.sceneManager.scene,
@@ -67,6 +69,7 @@ export class GameEngine {
       onPlayerJoined: (msg) => this.handlePlayerJoined(msg),
       onPlayerLeft: (msg) => this.handlePlayerLeft(msg),
       onSnapshot: (msg) => this.handleSnapshot(msg),
+      onStructuresUpdate: (msg) => this.structureManager.applyUpdate(msg),
       onServerError: (message) => {
         useGameStore
           .getState()
@@ -103,6 +106,8 @@ export class GameEngine {
     store.setPlayerId(msg.playerId)
     store.setConnectionStatus('connected')
     store.setScreen('playing')
+
+    this.structureManager.loadInitial(msg.structures || [])
 
     const playersMap = {}
     for (const p of msg.players) {
@@ -158,10 +163,11 @@ export class GameEngine {
     const store = useGameStore.getState()
     const localId = store.playerId
     const now = performance.now()
+    const colliders = this.structureManager.getColliders()
 
     for (const entry of snapshot.players) {
       if (entry.id === localId) {
-        this.localPlayer.reconcile(entry)
+        this.localPlayer.reconcile(entry, colliders)
       } else {
         const knownName = store.onlinePlayers[entry.id] || 'Jogador'
         this.remotePlayers.upsert(entry.id, knownName, {
@@ -197,9 +203,11 @@ export class GameEngine {
           this.accumulator = MAX_ACCUMULATOR_STEPS * fixedDt
         }
 
+        const colliders = this.structureManager.getColliders()
         let steps = 0
         while (this.accumulator >= fixedDt && steps < MAX_ACCUMULATOR_STEPS) {
-          const stepInput = this.localPlayer.stepPrediction(this.inputManager)
+          const sample = this.inputManager.sampleInput(0)
+          const stepInput = this.localPlayer.stepPrediction(sample, colliders)
           this.networkClient.sendInput(stepInput)
           this.accumulator -= fixedDt
           steps++
@@ -253,6 +261,7 @@ export class GameEngine {
 
     this.networkClient.dispose()
     this.inputManager.dispose()
+    this.structureManager.dispose()
     this.remotePlayers.dispose()
     this.sceneManager.dispose()
   }
