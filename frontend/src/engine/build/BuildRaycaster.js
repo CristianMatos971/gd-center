@@ -14,6 +14,7 @@ export class BuildRaycaster {
     this.raycaster = new THREE.Raycaster()
     this.ndc = new THREE.Vector2(0, 0)
     this.worldNormal = new THREE.Vector3()
+    this.dragPoint = new THREE.Vector3()
   }
 
   computePlacement(
@@ -25,14 +26,19 @@ export class BuildRaycaster {
     draftSize,
     grid,
     groundY,
-    verticalOffset
+    verticalOffset,
+    excludedMesh = null
   ) {
     this.ndc.set(ndcX, ndcY)
     this.raycaster.setFromCamera(this.ndc, camera)
 
-    const targets = groundMesh
-      ? [groundMesh, ...structureMeshes]
+    const filteredMeshes = excludedMesh
+      ? structureMeshes.filter((m) => m !== excludedMesh)
       : structureMeshes
+
+    const targets = groundMesh
+      ? [groundMesh, ...filteredMeshes]
+      : filteredMeshes
     const hits = this.raycaster.intersectObjects(targets, false)
     if (hits.length === 0) {
       return null
@@ -95,13 +101,79 @@ export class BuildRaycaster {
     }
   }
 
-  pickStructureId(camera, ndcX, ndcY, structureMeshes) {
+  computeDragPosition(
+    camera,
+    ndcX,
+    ndcY,
+    dragState,
+    draftSize,
+    grid,
+    bounds,
+    groundY,
+    maxY,
+    verticalOffset
+  ) {
+    this.ndc.set(ndcX, ndcY)
+    this.raycaster.setFromCamera(this.ndc, camera)
+    const ray = this.raycaster.ray
+
+    const maxReach = Math.max(dragState.grabDistance * 2.5, 25)
+    let dist = Math.max(1, Math.min(80, dragState.grabDistance))
+
+    if (ray.direction.y < -0.04) {
+      const planeT = (dragState.hitY - ray.origin.y) / ray.direction.y
+      if (planeT > 0.5) {
+        dist = Math.min(planeT, maxReach)
+      }
+    }
+
+    this.dragPoint.copy(ray.direction).multiplyScalar(dist).add(ray.origin)
+
+    const rawX = snapToGrid(this.dragPoint.x + dragState.offsetX, grid)
+    const rawZ = snapToGrid(this.dragPoint.z + dragState.offsetZ, grid)
+
+    const halfW = draftSize.width * 0.5
+    const halfH = draftSize.height * 0.5
+    const halfD = draftSize.depth * 0.5
+
+    const minX = bounds.minX + halfW
+    const maxX = bounds.maxX - halfW
+    const minZ = bounds.minZ + halfD
+    const maxZ = bounds.maxZ - halfD
+
+    const x = roundCoord(Math.max(minX, Math.min(maxX, rawX)))
+    const z = roundCoord(Math.max(minZ, Math.min(maxZ, rawZ)))
+    const y = roundCoord(
+      Math.max(
+        groundY + halfH,
+        Math.min(maxY - halfH, dragState.initialStructure.y + verticalOffset)
+      )
+    )
+
+    return { x, y, z }
+  }
+
+  pickStructureHit(camera, ndcX, ndcY, structureMeshes) {
     this.ndc.set(ndcX, ndcY)
     this.raycaster.setFromCamera(this.ndc, camera)
     const hits = this.raycaster.intersectObjects(structureMeshes, false)
     if (hits.length === 0) {
       return null
     }
-    return hits[0].object.userData?.structureId || null
+    const hit = hits[0]
+    const structureId = hit.object.userData?.structureId || null
+    if (!structureId) {
+      return null
+    }
+    return {
+      structureId,
+      point: hit.point.clone(),
+      distance: hit.distance,
+    }
+  }
+
+  pickStructureId(camera, ndcX, ndcY, structureMeshes) {
+    const hit = this.pickStructureHit(camera, ndcX, ndcY, structureMeshes)
+    return hit ? hit.structureId : null
   }
 }

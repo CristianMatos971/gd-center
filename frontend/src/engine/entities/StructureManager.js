@@ -107,6 +107,21 @@ export class StructureManager {
     return this.structuresById.get(id)?.mesh || null
   }
 
+  setTemporaryPosition(id, pos) {
+    const entry = this.structuresById.get(id)
+    if (!entry || !pos) return
+    entry.mesh.position.set(pos.x, pos.y, pos.z)
+    entry.mesh.updateMatrixWorld()
+  }
+
+  restoreAllPositions() {
+    for (const entry of this.structuresById.values()) {
+      const d = entry.data
+      entry.mesh.position.set(d.x, d.y, d.z)
+      entry.mesh.updateMatrixWorld()
+    }
+  }
+
   clearAllMeshes() {
     for (const entry of this.structuresById.values()) {
       this.scene.remove(entry.mesh)

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 
 const KIND_LABELS = [
@@ -10,18 +10,42 @@ const KIND_LABELS = [
 export function BuildPanel({ engineRef }) {
   const mapData = useGameStore((s) => s.mapData)
   const buildMode = useGameStore((s) => s.buildMode)
-  const buildTool = useGameStore((s) => s.buildTool)
   const selectedKind = useGameStore((s) => s.selectedKind)
   const draftSize = useGameStore((s) => s.draftSize)
   const draftColor = useGameStore((s) => s.draftColor)
   const selectedStructureId = useGameStore((s) => s.selectedStructureId)
+  const selectedStructurePos = useGameStore((s) => s.selectedStructurePos)
   const rejectionToast = useGameStore((s) => s.rejectionToast)
   const canUndo = useGameStore((s) => s.canUndo)
   const canRedo = useGameStore((s) => s.canRedo)
+  const pointerLocked = useGameStore((s) => s.pointerLocked)
 
   const selectBuildKind = useGameStore((s) => s.selectBuildKind)
-  const setBuildTool = useGameStore((s) => s.setBuildTool)
   const clearRejectionToast = useGameStore((s) => s.clearRejectionToast)
+
+  const colorInputRef = useRef(null)
+
+  useEffect(() => {
+    const ctrl = engineRef?.current?.buildController
+    if (!ctrl) return
+    ctrl.setOpenColorPickerCallback(() => {
+      const input = colorInputRef.current
+      if (!input) return
+      if (typeof input.showPicker === 'function') {
+        try {
+          input.showPicker()
+          return
+        } catch {
+          input.click()
+          return
+        }
+      }
+      input.click()
+    })
+    return () => {
+      ctrl.setOpenColorPickerCallback(null)
+    }
+  }, [engineRef, buildMode])
 
   useEffect(() => {
     if (!rejectionToast) return
@@ -49,75 +73,50 @@ export function BuildPanel({ engineRef }) {
       <div className="build-panel">
         <div className="build-panel-header">
           <span className="build-panel-title">Modo Construção</span>
-          <div className="build-btn-row">
-            <button
-              type="button"
-              className="build-btn"
-              disabled={!canUndo}
-              onClick={() => getBuildCtrl()?.undo()}
-            >
-              Desfazer (Ctrl+Z)
-            </button>
-            <button
-              type="button"
-              className="build-btn"
-              disabled={!canRedo}
-              onClick={() => getBuildCtrl()?.redo()}
-            >
-              Refazer (Ctrl+Y)
-            </button>
-            <button
-              type="button"
-              className="build-btn build-btn-exit"
-              onClick={() => getBuildCtrl()?.exitBuildMode()}
-            >
-              Sair (B)
-            </button>
-          </div>
+          <button
+            type="button"
+            className="build-btn build-btn-exit"
+            onClick={() => getBuildCtrl()?.exitBuildMode()}
+          >
+            Sair (B)
+          </button>
+        </div>
+
+        <div className="build-btn-row">
+          <button
+            type="button"
+            className={`build-btn ${pointerLocked ? 'active' : ''}`}
+            onClick={() => getBuildCtrl()?.toggleFreeLook()}
+          >
+            Free Look (F): {pointerLocked ? 'Ativo' : 'Livre'}
+          </button>
+          <button
+            type="button"
+            className="build-btn"
+            disabled={!canUndo}
+            onClick={() => getBuildCtrl()?.undo()}
+          >
+            Desfazer
+          </button>
+          <button
+            type="button"
+            className="build-btn"
+            disabled={!canRedo}
+            onClick={() => getBuildCtrl()?.redo()}
+          >
+            Refazer
+          </button>
         </div>
 
         <div className="build-section">
-          <span className="build-section-label">Ferramenta (Q)</span>
-          <div className="build-btn-row">
-            <button
-              type="button"
-              className={`build-btn ${buildTool === 'place' ? 'active' : ''}`}
-              onClick={() => {
-                getBuildCtrl()?.clearPendingDebounce()
-                setBuildTool('place')
-              }}
-            >
-              Colocar
-            </button>
-            <button
-              type="button"
-              className={`build-btn ${buildTool === 'select' ? 'active' : ''}`}
-              onClick={() => {
-                getBuildCtrl()?.clearPendingDebounce()
-                setBuildTool('select')
-              }}
-            >
-              Selecionar
-            </button>
-            <button
-              type="button"
-              className="build-btn"
-              onClick={() => getBuildCtrl()?.copyHoveredOrSelectedStructure()}
-            >
-              Copiar p/ Rascunho (G / Alt+Clique)
-            </button>
-          </div>
-        </div>
-
-        <div className="build-section">
-          <span className="build-section-label">Tipo (1 / 2 / 3)</span>
+          <span className="build-section-label">Tipo para Colocar (1 / 2 / 3)</span>
           <div className="build-btn-row">
             {KIND_LABELS.map((item) => (
               <button
                 key={item.key}
                 type="button"
                 className={`build-btn ${
-                  buildTool === 'place' && selectedKind === item.key
+                  !selectedStructureId && selectedKind === item.key
                     ? 'active'
                     : ''
                 }`}
@@ -134,6 +133,58 @@ export function BuildPanel({ engineRef }) {
             ))}
           </div>
         </div>
+
+        {selectedStructureId && selectedStructurePos && (
+          <div className="build-section">
+            <span className="build-section-label">
+              Posição do Objeto (Arraste ou Setas/PgUp/PgDn)
+            </span>
+            <div className="build-dimensions-grid">
+              <label className="build-field">
+                <span>X</span>
+                <input
+                  type="number"
+                  step={grid}
+                  value={selectedStructurePos.x}
+                  onChange={(e) =>
+                    getBuildCtrl()?.updateSelectedPositionField(
+                      'x',
+                      e.target.value
+                    )
+                  }
+                />
+              </label>
+              <label className="build-field">
+                <span>Y</span>
+                <input
+                  type="number"
+                  step={grid}
+                  value={selectedStructurePos.y}
+                  onChange={(e) =>
+                    getBuildCtrl()?.updateSelectedPositionField(
+                      'y',
+                      e.target.value
+                    )
+                  }
+                />
+              </label>
+              <label className="build-field">
+                <span>Z</span>
+                <input
+                  type="number"
+                  step={grid}
+                  value={selectedStructurePos.z}
+                  onChange={(e) =>
+                    getBuildCtrl()?.updateSelectedPositionField(
+                      'z',
+                      e.target.value
+                    )
+                  }
+                />
+              </label>
+            </div>
+          </div>
+        )}
 
         <div className="build-section">
           <span className="build-section-label">Dimensões (m)</span>
@@ -165,7 +216,7 @@ export function BuildPanel({ engineRef }) {
               />
             </label>
             <label className="build-field">
-              <span>Profundidade</span>
+              <span>Profund.</span>
               <input
                 type="number"
                 step={grid}
@@ -182,8 +233,9 @@ export function BuildPanel({ engineRef }) {
 
         <div className="build-section build-row-inline">
           <label className="build-color-label">
-            <span>Cor</span>
+            <span>Cor (X)</span>
             <input
+              ref={colorInputRef}
               type="color"
               value={draftColor}
               onChange={(e) => getBuildCtrl()?.updateDraftColor(e.target.value)}
@@ -200,18 +252,35 @@ export function BuildPanel({ engineRef }) {
 
           <button
             type="button"
-            className="build-btn build-btn-danger"
-            disabled={!selectedStructureId}
-            onClick={() => getBuildCtrl()?.removeSelectedStructure()}
+            className="build-btn"
+            onClick={() => getBuildCtrl()?.copyHoveredOrSelectedStructure()}
           >
-            Remover (Del)
+            Copiar (G)
+          </button>
+
+          <button
+            type="button"
+            className="build-btn build-btn-danger"
+            onClick={() => getBuildCtrl()?.removeSelectedOrHoveredStructure()}
+          >
+            Remover (Q)
           </button>
         </div>
 
         <div className="build-shortcuts">
-          <strong>Atalhos:</strong> Botão Direito: Olhar | WASD/Espaço/C/Shift:
-          Voar | 1/2/3: Tipo | Q: Ferramenta | R: Girar | G / Alt+Clique: Copiar
-          | Ctrl+Z/Y: Desfazer/Refazer | PgUp/PgDn: Offset Y | Del: Remover
+          <div>
+            <strong>Mouse Esq:</strong> Colocar |{' '}
+            <strong>Mouse Dir:</strong> Selecionar / Arrastar
+          </div>
+          <div>
+            <strong>F:</strong> Free Look | <strong>Q:</strong> Remover |{' '}
+            <strong>X:</strong> Cor | <strong>R:</strong> Girar |{' '}
+            <strong>G:</strong> Copiar
+          </div>
+          <div>
+            <strong>WASD/Espaço/C/Shift:</strong> Voar |{' '}
+            <strong>Setas/PgUp/PgDn:</strong> Mover
+          </div>
         </div>
       </div>
     </>

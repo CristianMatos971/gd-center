@@ -7,15 +7,18 @@ import { StatusPanel } from './StatusPanel'
 export function Hud({ engineRef, onRequestPointerLock }) {
   const screen = useGameStore((s) => s.screen)
   const buildMode = useGameStore((s) => s.buildMode)
+  const pointerLocked = useGameStore((s) => s.pointerLocked)
 
   return (
     <>
       {screen === 'playing' && (
         <>
-          <StatusPanel />
+          <div className="hud-left-stack">
+            <StatusPanel />
+            <BuildPanel engineRef={engineRef} />
+          </div>
           <DebugPanel />
-          <BuildPanel engineRef={engineRef} />
-          {!buildMode && <div className="crosshair" />}
+          {(!buildMode || pointerLocked) && <div className="crosshair" />}
         </>
       )}
       <PointerLockOverlay onRequestPointerLock={onRequestPointerLock} />

@@ -36,6 +36,7 @@ export const useGameStore = create((set) => ({
   draftSize: { width: 4, height: 3, depth: 0.3 },
   draftColor: '#cccccc',
   selectedStructureId: null,
+  selectedStructurePos: null,
   rejectionToast: null,
   canUndo: false,
   canRedo: false,
@@ -83,23 +84,32 @@ export const useGameStore = create((set) => ({
     set({
       buildMode,
       selectedStructureId: null,
+      selectedStructurePos: null,
     }),
   setBuildTool: (buildTool) =>
     set((state) => ({
       buildTool,
       selectedStructureId:
         buildTool === 'place' ? null : state.selectedStructureId,
+      selectedStructurePos:
+        buildTool === 'place' ? null : state.selectedStructurePos,
     })),
   selectBuildKind: (kind) =>
     set((state) => {
       const spec = state.mapData?.build?.kinds?.[kind]
       if (!spec) {
-        return { selectedKind: kind, buildTool: 'place', selectedStructureId: null }
+        return {
+          selectedKind: kind,
+          buildTool: 'place',
+          selectedStructureId: null,
+          selectedStructurePos: null,
+        }
       }
       return {
         selectedKind: kind,
         buildTool: 'place',
         selectedStructureId: null,
+        selectedStructurePos: null,
         draftSize: {
           width: spec.width,
           height: spec.height,
@@ -116,10 +126,15 @@ export const useGameStore = create((set) => ({
   setSelectedStructure: (structure) =>
     set((state) => {
       if (!structure) {
-        return { selectedStructureId: null }
+        return { selectedStructureId: null, selectedStructurePos: null }
       }
       return {
         selectedStructureId: structure.id,
+        selectedStructurePos: {
+          x: structure.x,
+          y: structure.y,
+          z: structure.z,
+        },
         draftSize: {
           width: structure.width,
           height: structure.height,
@@ -128,6 +143,12 @@ export const useGameStore = create((set) => ({
         draftColor: structure.color || state.draftColor,
       }
     }),
+  setSelectedStructurePos: (partialPos) =>
+    set((state) => ({
+      selectedStructurePos: state.selectedStructurePos
+        ? { ...state.selectedStructurePos, ...partialPos }
+        : null,
+    })),
   copyStructureToDraft: (structure) =>
     set((state) => {
       if (!structure) return {}
@@ -135,6 +156,7 @@ export const useGameStore = create((set) => ({
         selectedKind: structure.kind || state.selectedKind,
         buildTool: 'place',
         selectedStructureId: null,
+        selectedStructurePos: null,
         draftSize: {
           width: structure.width,
           height: structure.height,
@@ -166,6 +188,7 @@ export const useGameStore = create((set) => ({
       buildMode: false,
       buildTool: 'place',
       selectedStructureId: null,
+      selectedStructurePos: null,
       rejectionToast: null,
       canUndo: false,
       canRedo: false,
