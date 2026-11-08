@@ -121,7 +121,7 @@ public class GameLoopService {
                         map.physics(),
                         map.ground(),
                         map.bounds(),
-                        map.boxes()
+                        java.util.List.of()
                 );
                 player.applyStep(nextState, queued.yaw(), queued.pitch(), queued.seq());
             }

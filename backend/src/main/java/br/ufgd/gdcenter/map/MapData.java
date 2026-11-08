@@ -9,8 +9,8 @@ public record MapData(
         Ground ground,
         Bounds bounds,
         List<SpawnPoint> spawnPoints,
-        List<MapBox> boxes,
-        Physics physics
+        Physics physics,
+        BuildConfig build
 ) {
     public record Sky(String color) {}
 
@@ -20,8 +20,6 @@ public record MapData(
 
     public record SpawnPoint(double x, double y, double z, double yaw) {}
 
-    public record MapBox(double x, double y, double z, double width, double height, double depth, String color) {}
-
     public record Physics(
             int tickRate,
             double gravity,
@@ -29,7 +27,17 @@ public record MapData(
             double runSpeed,
             double jumpSpeed,
             PlayerDimensions player
-    ) {}
+    ) {
+        public void validate() {
+            if (tickRate <= 0 || gravity <= 0 || walkSpeed <= 0 || runSpeed <= 0 || jumpSpeed <= 0) {
+                throw new IllegalStateException("Invalid physics configuration");
+            }
+            if (player == null || player.width() <= 0 || player.height() <= 0
+                    || player.depth() <= 0 || player.eyeHeight() <= 0) {
+                throw new IllegalStateException("Invalid player dimensions");
+            }
+        }
+    }
 
     public record PlayerDimensions(double width, double height, double depth, double eyeHeight) {}
 
@@ -52,22 +60,13 @@ public record MapData(
         if (spawnPoints == null || spawnPoints.isEmpty()) {
             throw new IllegalStateException("At least one spawn point is required");
         }
-        if (boxes == null) {
-            throw new IllegalStateException("Boxes list must not be null");
+        if (physics == null) {
+            throw new IllegalStateException("Physics configuration is required");
         }
-        for (MapBox box : boxes) {
-            if (box.width() <= 0 || box.height() <= 0 || box.depth() <= 0) {
-                throw new IllegalStateException("Map box dimensions must be positive");
-            }
+        physics.validate();
+        if (build == null) {
+            throw new IllegalStateException("Build configuration is required");
         }
-        if (physics == null || physics.tickRate() <= 0 || physics.gravity() <= 0
-                || physics.walkSpeed() <= 0 || physics.runSpeed() <= 0 || physics.jumpSpeed() <= 0) {
-            throw new IllegalStateException("Invalid physics configuration");
-        }
-        if (physics.player() == null || physics.player().width() <= 0
-                || physics.player().height() <= 0 || physics.player().depth() <= 0
-                || physics.player().eyeHeight() <= 0) {
-            throw new IllegalStateException("Invalid player dimensions");
-        }
+        build.validate();
     }
 }

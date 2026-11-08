@@ -1,6 +1,7 @@
 package br.ufgd.gdcenter.movement;
 
 import br.ufgd.gdcenter.map.MapData;
+
 import java.util.List;
 
 public final class MovementSystem {
@@ -28,7 +29,7 @@ public final class MovementSystem {
             MapData.Physics physics,
             MapData.Ground ground,
             MapData.Bounds bounds,
-            List<MapData.MapBox> boxes
+            List<ColliderBox> boxes
     ) {
         double dt = 1.0 / physics.tickRate();
 
@@ -72,11 +73,11 @@ public final class MovementSystem {
         double halfD = physics.player().depth() * 0.5;
         double playerH = physics.player().height();
 
-        List<MapData.MapBox> boxList = boxes != null ? boxes : List.of();
+        List<ColliderBox> boxList = boxes != null ? boxes : List.of();
 
         x += vx * dt;
         if (vx != 0.0) {
-            for (MapData.MapBox box : boxList) {
+            for (ColliderBox box : boxList) {
                 if (overlaps(x, y, z, halfW, playerH, halfD, box)) {
                     double boxMinX = box.x() - box.width() * 0.5;
                     double boxMaxX = box.x() + box.width() * 0.5;
@@ -91,7 +92,7 @@ public final class MovementSystem {
 
         z += vz * dt;
         if (vz != 0.0) {
-            for (MapData.MapBox box : boxList) {
+            for (ColliderBox box : boxList) {
                 if (overlaps(x, y, z, halfW, playerH, halfD, box)) {
                     double boxMinZ = box.z() - box.depth() * 0.5;
                     double boxMaxZ = box.z() + box.depth() * 0.5;
@@ -106,7 +107,7 @@ public final class MovementSystem {
 
         onGround = false;
         y += vy * dt;
-        for (MapData.MapBox box : boxList) {
+        for (ColliderBox box : boxList) {
             if (overlaps(x, y, z, halfW, playerH, halfD, box)) {
                 double boxMinY = box.y() - box.height() * 0.5;
                 double boxMaxY = box.y() + box.height() * 0.5;
@@ -147,7 +148,7 @@ public final class MovementSystem {
             double halfW,
             double playerH,
             double halfD,
-            MapData.MapBox box
+            ColliderBox box
     ) {
         double pMinX = px - halfW;
         double pMaxX = px + halfW;

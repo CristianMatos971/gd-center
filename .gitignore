@@ -28,6 +28,8 @@ node_modules/
 dist/
 dist-ssr/
 target/
+backend/data/
+data/
 
 # Task instructions and reports
 currentTask.md

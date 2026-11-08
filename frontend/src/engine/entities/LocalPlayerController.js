@@ -38,7 +38,7 @@ export class LocalPlayerController {
       this.mapData.physics,
       this.mapData.ground,
       this.mapData.bounds,
-      this.mapData.boxes
+      []
     )
 
     return stepInput
@@ -68,7 +68,7 @@ export class LocalPlayerController {
         this.mapData.physics,
         this.mapData.ground,
         this.mapData.bounds,
-        this.mapData.boxes
+        []
       )
     }
 

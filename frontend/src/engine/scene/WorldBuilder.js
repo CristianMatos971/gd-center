@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export class WorldBuilder {
   static build(scene, mapData) {
-    const { bounds, ground, boxes } = mapData
+    const { bounds, ground } = mapData
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.65)
     scene.add(ambientLight)
@@ -32,14 +32,6 @@ export class WorldBuilder {
     grid.position.set(centerX, ground.y + 0.005, centerZ)
     scene.add(grid)
 
-    for (const box of boxes) {
-      const boxGeom = new THREE.BoxGeometry(box.width, box.height, box.depth)
-      const boxMat = new THREE.MeshLambertMaterial({
-        color: box.color || '#8d6e63',
-      })
-      const boxMesh = new THREE.Mesh(boxGeom, boxMat)
-      boxMesh.position.set(box.x, box.y, box.z)
-      scene.add(boxMesh)
-    }
+    return groundMesh
   }
 }

@@ -1,0 +1,13 @@
+{
+  "tickRate": 60,
+  "gravity": 20,
+  "walkSpeed": 4,
+  "runSpeed": 7,
+  "jumpSpeed": 7,
+  "player": {
+    "width": 0.6,
+    "height": 1.8,
+    "depth": 0.6,
+    "eyeHeight": 1.6
+  }
+}
