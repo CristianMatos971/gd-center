@@ -1,5 +1,9 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.inbound.PlayerInputDTO;
+import br.ufgd.gdcenter.dto.outbound.PlayerStateDTO;
+import br.ufgd.gdcenter.dto.outbound.PlayerSummaryDTO;
+import br.ufgd.gdcenter.dto.outbound.SnapshotPlayerDTO;
 import br.ufgd.gdcenter.movement.MovementSystem;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -10,12 +14,10 @@ public class PlayerSessionState {
 
     public static final int MAX_INPUT_QUEUE_SIZE = 120;
 
-    public record QueuedInput(long seq, MovementSystem.Input input) {}
-
     private final String id;
     private final String name;
     private final WebSocketSession session;
-    private final Deque<QueuedInput> inputQueue = new ArrayDeque<>(MAX_INPUT_QUEUE_SIZE);
+    private final Deque<PlayerInputDTO> inputQueue = new ArrayDeque<>(MAX_INPUT_QUEUE_SIZE);
 
     private double x;
     private double y;
@@ -48,14 +50,14 @@ public class PlayerSessionState {
         this.lastProcessedSeq = 0L;
     }
 
-    public void enqueueInput(QueuedInput queuedInput) {
+    public void enqueueInput(PlayerInputDTO input) {
         if (inputQueue.size() >= MAX_INPUT_QUEUE_SIZE) {
             inputQueue.pollFirst();
         }
-        inputQueue.addLast(queuedInput);
+        inputQueue.addLast(input);
     }
 
-    public QueuedInput pollInput() {
+    public PlayerInputDTO pollInput() {
         return inputQueue.pollFirst();
     }
 
@@ -76,16 +78,16 @@ public class PlayerSessionState {
         return new MovementSystem.State(x, y, z, vy, onGround);
     }
 
-    public ProtocolMessages.PlayerStatePayload toStatePayload() {
-        return new ProtocolMessages.PlayerStatePayload(x, y, z, vy, onGround, yaw, pitch);
+    public PlayerStateDTO toStateDTO() {
+        return new PlayerStateDTO(x, y, z, vy, onGround, yaw, pitch);
     }
 
-    public ProtocolMessages.PlayerSummaryPayload toSummaryPayload() {
-        return new ProtocolMessages.PlayerSummaryPayload(id, name, toStatePayload());
+    public PlayerSummaryDTO toSummaryDTO() {
+        return new PlayerSummaryDTO(id, name, toStateDTO());
     }
 
-    public ProtocolMessages.SnapshotPlayerEntry toSnapshotEntry() {
-        return new ProtocolMessages.SnapshotPlayerEntry(
+    public SnapshotPlayerDTO toSnapshotDTO() {
+        return new SnapshotPlayerDTO(
                 id, x, y, z, vy, onGround, yaw, pitch, lastProcessedSeq
         );
     }

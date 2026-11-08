@@ -1,5 +1,7 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.inbound.JoinRequestDTO;
+import br.ufgd.gdcenter.dto.inbound.PlayerInputDTO;
 import br.ufgd.gdcenter.map.MapData;
 import br.ufgd.gdcenter.map.MapService;
 import br.ufgd.gdcenter.movement.MovementSystem;
@@ -8,18 +10,9 @@ import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,41 +24,23 @@ public class GameLoopService {
     private static final Logger log = LoggerFactory.getLogger(GameLoopService.class);
     private static final int MAX_INPUTS_PER_TICK = 8;
     private static final int SNAPSHOT_INTERVAL_TICKS = 3;
-    private static final double MAX_PITCH = Math.toRadians(89.0);
-
-    private sealed interface LoopCommand permits JoinCommand, InputCommand, LeaveCommand {}
-
-    private record JoinCommand(WebSocketSession session, String rawName) implements LoopCommand {}
-
-    private record InputCommand(
-            String sessionId,
-            long seq,
-            boolean forward,
-            boolean back,
-            boolean left,
-            boolean right,
-            boolean run,
-            boolean jump,
-            double yaw,
-            double pitch
-    ) implements LoopCommand {}
-
-    private record LeaveCommand(String sessionId) implements LoopCommand {}
 
     private final MapService mapService;
-    private final ObjectMapper objectMapper;
+    private final PlayerRegistry playerRegistry;
+    private final WebSocketBroadcaster broadcaster;
     private final ConcurrentLinkedQueue<LoopCommand> commandQueue = new ConcurrentLinkedQueue<>();
 
-    private final Map<String, PlayerSessionState> playersBySessionId = new LinkedHashMap<>();
-    private final Map<String, String> activeNamesLower = new LinkedHashMap<>();
     private long currentTick = 0L;
-    private int nextSpawnIndex = 0;
-
     private ScheduledExecutorService executor;
 
-    public GameLoopService(MapService mapService, ObjectMapper objectMapper) {
+    public GameLoopService(
+            MapService mapService,
+            PlayerRegistry playerRegistry,
+            WebSocketBroadcaster broadcaster
+    ) {
         this.mapService = mapService;
-        this.objectMapper = objectMapper;
+        this.playerRegistry = playerRegistry;
+        this.broadcaster = broadcaster;
     }
 
     @PostConstruct
@@ -89,45 +64,16 @@ public class GameLoopService {
         }
     }
 
-    public void enqueueJoin(WebSocketSession session, String rawName) {
-        commandQueue.offer(new JoinCommand(session, rawName));
+    public void enqueueJoin(WebSocketSession session, JoinRequestDTO request) {
+        commandQueue.offer(new LoopCommand.JoinCommand(session, request));
     }
 
-    public void enqueueInput(
-            String sessionId,
-            long seq,
-            boolean forward,
-            boolean back,
-            boolean left,
-            boolean right,
-            boolean run,
-            boolean jump,
-            double yaw,
-            double pitch
-    ) {
-        commandQueue.offer(new InputCommand(
-                sessionId, seq, forward, back, left, right, run, jump, yaw, pitch
-        ));
+    public void enqueueInput(String sessionId, PlayerInputDTO input) {
+        commandQueue.offer(new LoopCommand.InputCommand(sessionId, input));
     }
 
     public void enqueueLeave(String sessionId) {
-        commandQueue.offer(new LeaveCommand(sessionId));
-    }
-
-    public void sendPong(WebSocketSession session, double t) {
-        if (!Double.isFinite(t)) {
-            return;
-        }
-        sendJson(session, new ProtocolMessages.PongMessage(t));
-    }
-
-    public void sendErrorAndClose(WebSocketSession session, String message) {
-        sendJson(session, new ProtocolMessages.ErrorMessage(message));
-        try {
-            session.close(CloseStatus.POLICY_VIOLATION);
-        } catch (IOException e) {
-            log.debug("Failed to close session {}: {}", session.getId(), e.getMessage());
-        }
+        commandQueue.offer(new LoopCommand.LeaveCommand(sessionId));
     }
 
     private void runTickSafely() {
@@ -144,186 +90,92 @@ public class GameLoopService {
         LoopCommand cmd;
         while ((cmd = commandQueue.poll()) != null) {
             switch (cmd) {
-                case JoinCommand joinCmd -> handleJoin(joinCmd);
-                case InputCommand inputCmd -> handleInputEnqueue(inputCmd);
-                case LeaveCommand leaveCmd -> handleLeave(leaveCmd);
+                case LoopCommand.JoinCommand joinCmd -> handleJoin(joinCmd);
+                case LoopCommand.InputCommand inputCmd -> handleInputEnqueue(inputCmd);
+                case LoopCommand.LeaveCommand leaveCmd -> handleLeave(leaveCmd);
             }
         }
 
+        stepAllPlayers();
+
+        if (currentTick % SNAPSHOT_INTERVAL_TICKS == 0 && !playerRegistry.isEmpty()) {
+            broadcaster.broadcastSnapshot(
+                    currentTick,
+                    playerRegistry.buildSnapshotEntries(),
+                    playerRegistry.getAllPlayers()
+            );
+        }
+    }
+
+    private void stepAllPlayers() {
         MapData map = mapService.getMapData();
-        for (PlayerSessionState player : playersBySessionId.values()) {
+        for (PlayerSessionState player : playerRegistry.getAllPlayers()) {
             for (int i = 0; i < MAX_INPUTS_PER_TICK; i++) {
-                PlayerSessionState.QueuedInput queued = player.pollInput();
+                PlayerInputDTO queued = player.pollInput();
                 if (queued == null) {
                     break;
                 }
                 MovementSystem.State nextState = MovementSystem.step(
                         player.toMovementState(),
-                        queued.input(),
+                        queued.toMovementInput(),
                         map.physics(),
                         map.ground(),
                         map.bounds(),
                         map.boxes()
                 );
-                player.applyStep(nextState, queued.input().yaw(), queued.input().pitch(), queued.seq());
+                player.applyStep(nextState, queued.yaw(), queued.pitch(), queued.seq());
             }
-        }
-
-        if (currentTick % SNAPSHOT_INTERVAL_TICKS == 0 && !playersBySessionId.isEmpty()) {
-            broadcastSnapshot();
         }
     }
 
-    private void handleJoin(JoinCommand cmd) {
+    private void handleJoin(LoopCommand.JoinCommand cmd) {
         WebSocketSession session = cmd.session();
-        if (!session.isOpen()) {
-            return;
-        }
-        if (playersBySessionId.containsKey(session.getId())) {
+        if (!session.isOpen() || playerRegistry.hasSession(session.getId())) {
             return;
         }
 
-        String trimmed = cmd.rawName() == null ? "" : cmd.rawName().trim();
-        if (trimmed.isEmpty() || trimmed.length() > 16) {
-            sendErrorAndClose(session, "O nome deve ter entre 1 e 16 caracteres.");
+        Optional<String> validationError = cmd.request().validate();
+        if (validationError.isPresent()) {
+            broadcaster.sendErrorAndClose(session, validationError.get());
             return;
         }
 
-        String lower = trimmed.toLowerCase(Locale.ROOT);
-        if (activeNamesLower.containsKey(lower)) {
-            sendErrorAndClose(session, "Este nome já está em uso por outro jogador.");
+        String playerName = cmd.request().name();
+        if (playerRegistry.isNameTaken(playerName)) {
+            broadcaster.sendErrorAndClose(session, "Este nome já está em uso por outro jogador.");
             return;
         }
 
         MapData map = mapService.getMapData();
-        List<MapData.SpawnPoint> spawns = map.spawnPoints();
-        MapData.SpawnPoint spawn = spawns.get(nextSpawnIndex % spawns.size());
-        nextSpawnIndex = (nextSpawnIndex + 1) % spawns.size();
-
-        String playerId = UUID.randomUUID().toString();
-        PlayerSessionState newPlayer = new PlayerSessionState(
-                playerId,
-                trimmed,
+        PlayerSessionState newPlayer = playerRegistry.registerPlayer(
                 session,
-                spawn.x(),
-                spawn.y(),
-                spawn.z(),
-                spawn.yaw()
+                playerName,
+                map.spawnPoints()
         );
-
-        playersBySessionId.put(session.getId(), newPlayer);
-        activeNamesLower.put(lower, session.getId());
 
         int tickRate = map.physics().tickRate();
         int snapshotRate = tickRate / SNAPSHOT_INTERVAL_TICKS;
 
-        List<ProtocolMessages.PlayerSummaryPayload> allPlayers = new ArrayList<>(playersBySessionId.size());
-        for (PlayerSessionState existing : playersBySessionId.values()) {
-            allPlayers.add(existing.toSummaryPayload());
-        }
-
-        ProtocolMessages.WelcomeMessage welcome = new ProtocolMessages.WelcomeMessage(
-                playerId,
+        broadcaster.sendWelcome(
+                newPlayer,
                 tickRate,
                 snapshotRate,
-                newPlayer.toStatePayload(),
-                allPlayers
+                playerRegistry.buildPlayerSummaries()
         );
-        sendJson(session, welcome);
+        broadcaster.broadcastPlayerJoined(newPlayer, playerRegistry.getAllPlayers());
+    }
 
-        ProtocolMessages.PlayerJoinedMessage joinedMsg = new ProtocolMessages.PlayerJoinedMessage(
-                playerId,
-                trimmed,
-                newPlayer.toStatePayload()
-        );
-        String serializedJoined = toJson(joinedMsg);
-        if (serializedJoined != null) {
-            for (PlayerSessionState other : playersBySessionId.values()) {
-                if (!other.getId().equals(playerId)) {
-                    sendRaw(other.getSession(), serializedJoined);
-                }
-            }
+    private void handleInputEnqueue(LoopCommand.InputCommand cmd) {
+        PlayerSessionState player = playerRegistry.getBySessionId(cmd.sessionId());
+        if (player != null) {
+            player.enqueueInput(cmd.input());
         }
     }
 
-    private void handleInputEnqueue(InputCommand cmd) {
-        PlayerSessionState player = playersBySessionId.get(cmd.sessionId());
-        if (player == null) {
-            return;
-        }
-        if (!Double.isFinite(cmd.yaw()) || !Double.isFinite(cmd.pitch()) || cmd.seq() <= 0) {
-            return;
-        }
-        double clampedPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, cmd.pitch()));
-
-        MovementSystem.Input sanitizedInput = new MovementSystem.Input(
-                cmd.forward(),
-                cmd.back(),
-                cmd.left(),
-                cmd.right(),
-                cmd.run(),
-                cmd.jump(),
-                cmd.yaw(),
-                clampedPitch
-        );
-        player.enqueueInput(new PlayerSessionState.QueuedInput(cmd.seq(), sanitizedInput));
-    }
-
-    private void handleLeave(LeaveCommand cmd) {
-        PlayerSessionState removed = playersBySessionId.remove(cmd.sessionId());
-        if (removed == null) {
-            return;
-        }
-        activeNamesLower.remove(removed.getName().toLowerCase(Locale.ROOT));
-
-        ProtocolMessages.PlayerLeftMessage leftMsg = new ProtocolMessages.PlayerLeftMessage(removed.getId());
-        String serialized = toJson(leftMsg);
-        if (serialized != null) {
-            for (PlayerSessionState remaining : playersBySessionId.values()) {
-                sendRaw(remaining.getSession(), serialized);
-            }
-        }
-    }
-
-    private void broadcastSnapshot() {
-        List<ProtocolMessages.SnapshotPlayerEntry> entries = new ArrayList<>(playersBySessionId.size());
-        for (PlayerSessionState player : playersBySessionId.values()) {
-            entries.add(player.toSnapshotEntry());
-        }
-        ProtocolMessages.SnapshotMessage snapshot = new ProtocolMessages.SnapshotMessage(currentTick, entries);
-        String serialized = toJson(snapshot);
-        if (serialized == null) {
-            return;
-        }
-        for (PlayerSessionState player : playersBySessionId.values()) {
-            sendRaw(player.getSession(), serialized);
-        }
-    }
-
-    private void sendJson(WebSocketSession session, Object payload) {
-        String json = toJson(payload);
-        if (json != null) {
-            sendRaw(session, json);
-        }
-    }
-
-    private String toJson(Object payload) {
-        try {
-            return objectMapper.writeValueAsString(payload);
-        } catch (Exception e) {
-            log.warn("Failed to serialize WebSocket message: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    private void sendRaw(WebSocketSession session, String json) {
-        if (!session.isOpen()) {
-            return;
-        }
-        try {
-            session.sendMessage(new TextMessage(json));
-        } catch (Exception e) {
-            log.debug("Failed to send message to session {}: {}", session.getId(), e.getMessage());
+    private void handleLeave(LoopCommand.LeaveCommand cmd) {
+        PlayerSessionState removed = playerRegistry.removeBySessionId(cmd.sessionId());
+        if (removed != null) {
+            broadcaster.broadcastPlayerLeft(removed.getId(), playerRegistry.getAllPlayers());
         }
     }
 }

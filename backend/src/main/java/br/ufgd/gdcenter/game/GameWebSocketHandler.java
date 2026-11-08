@@ -1,5 +1,8 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.inbound.JoinRequestDTO;
+import br.ufgd.gdcenter.dto.inbound.PingRequestDTO;
+import br.ufgd.gdcenter.dto.inbound.PlayerInputDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,11 +25,17 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private static final int BUFFER_SIZE_LIMIT_BYTES = 64 * 1024;
 
     private final GameLoopService gameLoopService;
+    private final WebSocketBroadcaster broadcaster;
     private final ObjectMapper objectMapper;
     private final Map<String, WebSocketSession> decoratedSessions = new ConcurrentHashMap<>();
 
-    public GameWebSocketHandler(GameLoopService gameLoopService, ObjectMapper objectMapper) {
+    public GameWebSocketHandler(
+            GameLoopService gameLoopService,
+            WebSocketBroadcaster broadcaster,
+            ObjectMapper objectMapper
+    ) {
         this.gameLoopService = gameLoopService;
+        this.broadcaster = broadcaster;
         this.objectMapper = objectMapper;
     }
 
@@ -55,46 +64,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         String type = root.path("type").asString("");
         switch (type) {
-            case "join" -> {
-                String name = root.path("name").asString("");
-                gameLoopService.enqueueJoin(decorated, name);
-            }
-            case "input" -> {
-                JsonNode seqNode = root.get("seq");
-                JsonNode yawNode = root.get("yaw");
-                JsonNode pitchNode = root.get("pitch");
-                if (seqNode == null || !seqNode.isNumber()
-                        || yawNode == null || !yawNode.isNumber()
-                        || pitchNode == null || !pitchNode.isNumber()) {
-                    return;
-                }
-                long seq = seqNode.asLong(-1L);
-                double yaw = yawNode.asDouble(Double.NaN);
-                double pitch = pitchNode.asDouble(Double.NaN);
-                if (!Double.isFinite(yaw) || !Double.isFinite(pitch) || seq <= 0) {
-                    return;
-                }
-
-                boolean forward = root.path("forward").asBoolean(false);
-                boolean back = root.path("back").asBoolean(false);
-                boolean left = root.path("left").asBoolean(false);
-                boolean right = root.path("right").asBoolean(false);
-                boolean run = root.path("run").asBoolean(false);
-                boolean jump = root.path("jump").asBoolean(false);
-
-                gameLoopService.enqueueInput(
-                        session.getId(), seq, forward, back, left, right, run, jump, yaw, pitch
-                );
-            }
-            case "ping" -> {
-                JsonNode tNode = root.get("t");
-                if (tNode != null && tNode.isNumber()) {
-                    double t = tNode.asDouble(Double.NaN);
-                    if (Double.isFinite(t)) {
-                        gameLoopService.sendPong(decorated, t);
-                    }
-                }
-            }
+            case "join" -> gameLoopService.enqueueJoin(decorated, JoinRequestDTO.fromJson(root));
+            case "input" -> PlayerInputDTO.fromJson(root)
+                    .ifPresent(input -> gameLoopService.enqueueInput(session.getId(), input));
+            case "ping" -> PingRequestDTO.fromJson(root)
+                    .ifPresent(ping -> broadcaster.sendPong(decorated, ping.t()));
             default -> log.debug("Unknown WebSocket message type '{}' from session {}", type, session.getId());
         }
     }
