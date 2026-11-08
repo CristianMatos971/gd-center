@@ -10,6 +10,7 @@ export function StatusPanel() {
   const playerName = useGameStore((s) => s.playerName)
   const onlinePlayers = useGameStore((s) => s.onlinePlayers)
   const connectionStatus = useGameStore((s) => s.connectionStatus)
+  const buildMode = useGameStore((s) => s.buildMode)
 
   const onlineCount = Object.keys(onlinePlayers).length
 
@@ -29,7 +30,10 @@ export function StatusPanel() {
           {STATUS_LABELS[connectionStatus] || connectionStatus}
         </span>
       </div>
-      <div className="hud-hint">F3: Debug | F4: Latência artificial</div>
+      <div className="hud-hint">
+        B: {buildMode ? 'Sair Construção' : 'Construir'} | F3: Debug | F4:
+        Latência
+      </div>
     </div>
   )
 }

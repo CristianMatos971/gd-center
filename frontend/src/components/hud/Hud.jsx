@@ -1,10 +1,12 @@
 import { useGameStore } from '../../store/useGameStore'
+import { BuildPanel } from './BuildPanel'
 import { DebugPanel } from './DebugPanel'
 import { PointerLockOverlay } from './PointerLockOverlay'
 import { StatusPanel } from './StatusPanel'
 
-export function Hud({ onRequestPointerLock }) {
+export function Hud({ engineRef, onRequestPointerLock }) {
   const screen = useGameStore((s) => s.screen)
+  const buildMode = useGameStore((s) => s.buildMode)
 
   return (
     <>
@@ -12,7 +14,8 @@ export function Hud({ onRequestPointerLock }) {
         <>
           <StatusPanel />
           <DebugPanel />
-          <div className="crosshair" />
+          <BuildPanel engineRef={engineRef} />
+          {!buildMode && <div className="crosshair" />}
         </>
       )}
       <PointerLockOverlay onRequestPointerLock={onRequestPointerLock} />

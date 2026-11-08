@@ -1,4 +1,5 @@
 import { useGameStore } from '../store/useGameStore'
+import { BuildController } from './build/BuildController'
 import { LocalPlayerController } from './entities/LocalPlayerController'
 import { RemotePlayerManager } from './entities/RemotePlayerManager'
 import { StructureManager } from './entities/StructureManager'
@@ -25,7 +26,10 @@ export class GameEngine {
     this.sceneManager = new SceneManager(container, mapData.sky.color)
     this.groundMesh = WorldBuilder.build(this.sceneManager.scene, mapData)
 
-    this.structureManager = new StructureManager(this.sceneManager.scene)
+    this.structureManager = new StructureManager(
+      this.sceneManager.scene,
+      (removedId) => this.buildController?.handleStructureRemoved(removedId)
+    )
     this.localPlayer = new LocalPlayerController(mapData)
     this.remotePlayers = new RemotePlayerManager(
       this.sceneManager.scene,
@@ -70,6 +74,9 @@ export class GameEngine {
       onPlayerLeft: (msg) => this.handlePlayerLeft(msg),
       onSnapshot: (msg) => this.handleSnapshot(msg),
       onStructuresUpdate: (msg) => this.structureManager.applyUpdate(msg),
+      onBuildRejected: (msg) => {
+        useGameStore.getState().showRejectionToast(msg.code)
+      },
       onServerError: (message) => {
         useGameStore
           .getState()
@@ -89,6 +96,17 @@ export class GameEngine {
           )
         }
       },
+    })
+
+    this.buildController = new BuildController({
+      canvasElement: this.sceneManager.domElement,
+      sceneManager: this.sceneManager,
+      groundMesh: this.groundMesh,
+      structureManager: this.structureManager,
+      localPlayer: this.localPlayer,
+      inputManager: this.inputManager,
+      networkClient: this.networkClient,
+      mapData,
     })
 
     this.networkClient.connect()
@@ -204,22 +222,31 @@ export class GameEngine {
         }
 
         const colliders = this.structureManager.getColliders()
+        const inBuildMode = this.buildController.isActive
         let steps = 0
         while (this.accumulator >= fixedDt && steps < MAX_ACCUMULATOR_STEPS) {
-          const sample = this.inputManager.sampleInput(0)
+          const sample = inBuildMode
+            ? this.buildController.samplePlayerInput()
+            : this.inputManager.sampleInput(0)
           const stepInput = this.localPlayer.stepPrediction(sample, colliders)
           this.networkClient.sendInput(stepInput)
           this.accumulator -= fixedDt
           steps++
         }
 
-        const alpha = Math.max(0, Math.min(1, this.accumulator / fixedDt))
-        this.localPlayer.updateCamera(
-          this.sceneManager.camera,
-          this.inputManager.yaw,
-          this.inputManager.pitch,
-          alpha
-        )
+        if (inBuildMode) {
+          this.buildController.updateFrame(elapsedSec)
+        } else {
+          this.buildController.updateFrame(0)
+          const alpha = Math.max(0, Math.min(1, this.accumulator / fixedDt))
+          this.localPlayer.updateCamera(
+            this.sceneManager.camera,
+            this.inputManager.yaw,
+            this.inputManager.pitch,
+            alpha
+          )
+        }
+
         this.remotePlayers.updateInterpolation(now)
       }
 
@@ -259,6 +286,7 @@ export class GameEngine {
       this.animationFrameId = null
     }
 
+    this.buildController.dispose()
     this.networkClient.dispose()
     this.inputManager.dispose()
     this.structureManager.dispose()

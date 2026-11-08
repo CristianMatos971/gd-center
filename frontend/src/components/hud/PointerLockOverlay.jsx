@@ -4,6 +4,7 @@ export function PointerLockOverlay({ onRequestPointerLock }) {
   const screen = useGameStore((s) => s.screen)
   const playerName = useGameStore((s) => s.playerName)
   const pointerLocked = useGameStore((s) => s.pointerLocked)
+  const buildMode = useGameStore((s) => s.buildMode)
 
   if (screen === 'connecting') {
     return (
@@ -16,14 +17,18 @@ export function PointerLockOverlay({ onRequestPointerLock }) {
     )
   }
 
+  if (buildMode) {
+    return null
+  }
+
   if (!pointerLocked) {
     return (
       <div className="pointer-overlay" onClick={onRequestPointerLock}>
         <div className="pointer-overlay-box">
           <h2>Clique para jogar</h2>
           <p>
-            WASD: Mover | Shift: Correr | Espaço: Pular | Mouse: Olhar | ESC:
-            Pausar cursor
+            WASD: Mover | Shift: Correr | Espaço: Pular | Mouse: Olhar | B:
+            Construir | ESC: Pausar cursor
           </p>
         </div>
       </div>

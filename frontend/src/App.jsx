@@ -17,6 +17,7 @@ export function App() {
     <div className="game-wrapper">
       <GameCanvas engineRef={engineRef} />
       <Hud
+        engineRef={engineRef}
         onRequestPointerLock={() => engineRef.current?.requestPointerLock()}
       />
     </div>

@@ -1,3 +1,5 @@
+import { useGameStore } from '../../store/useGameStore'
+
 const MOUSE_SENSITIVITY = 0.002
 const MAX_PITCH = (89 * Math.PI) / 180
 
@@ -31,7 +33,7 @@ export class InputManager {
   }
 
   sampleInput(seq) {
-    const locked = this.isPointerLocked
+    const locked = this.isPointerLocked && !useGameStore.getState().buildMode
     return {
       seq,
       forward: locked ? this.keys.KeyW : false,
@@ -55,12 +57,14 @@ export class InputManager {
   }
 
   requestPointerLock() {
+    if (useGameStore.getState().buildMode) return
     if (!this.isPointerLocked) {
       this.canvasElement.requestPointerLock?.()
     }
   }
 
   onCanvasClick = () => {
+    if (useGameStore.getState().buildMode) return
     this.requestPointerLock()
   }
 
@@ -73,6 +77,7 @@ export class InputManager {
   }
 
   onMouseMove = (e) => {
+    if (useGameStore.getState().buildMode) return
     if (!this.isPointerLocked) return
     this.yaw -= e.movementX * MOUSE_SENSITIVITY
     this.pitch = Math.max(
@@ -94,6 +99,7 @@ export class InputManager {
       return
     }
 
+    if (useGameStore.getState().buildMode) return
     if (!this.isPointerLocked) return
 
     if (e.code in this.keys) {
