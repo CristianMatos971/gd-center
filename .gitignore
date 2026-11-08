@@ -30,6 +30,7 @@ dist-ssr/
 target/
 backend/data/
 data/
+tools/campus/out/
 
 # Task instructions and reports
 currentTask.md
