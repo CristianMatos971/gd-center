@@ -71,8 +71,15 @@ public class GameLoopService {
     @PreDestroy
     public void stop() {
         if (executor != null) {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             executor.shutdownNow();
         }
+        structureRegistry.flushToDisk();
     }
 
     public void enqueueJoin(WebSocketSession session, JoinRequestDTO request) {

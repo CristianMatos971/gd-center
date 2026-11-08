@@ -112,6 +112,16 @@ public class StructureRegistry {
         return Optional.of(new StructuresUpdateResponseDTO(added, updated, removedIds));
     }
 
+    public void flushToDisk() {
+        if (!addedIdsThisTick.isEmpty() || !updatedIdsThisTick.isEmpty() || !removedIdsThisTick.isEmpty()) {
+            addedIdsThisTick.clear();
+            updatedIdsThisTick.clear();
+            removedIdsThisTick.clear();
+            persistenceService.markDirty(cachedStructures);
+        }
+        persistenceService.flushIfDirtySafely();
+    }
+
     private void rebuildCaches() {
         List<Structure> structuresList = new ArrayList<>(structuresById.size());
         List<ColliderBox> collidersList = new ArrayList<>(structuresById.size());

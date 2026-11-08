@@ -449,6 +449,11 @@ export class BuildController {
 
   dispose() {
     this.clearPendingDebounce()
+    this.clearFlyKeys()
+    this.isRightMouseHeld = false
+    if (document.pointerLockElement === this.canvasElement) {
+      document.exitPointerLock?.()
+    }
     this.canvasElement.removeEventListener('contextmenu', this.onContextMenu)
     this.canvasElement.removeEventListener('mousedown', this.onMouseDown)
     window.removeEventListener('mouseup', this.onMouseUp)

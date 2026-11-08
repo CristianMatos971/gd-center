@@ -48,7 +48,7 @@ export class SceneManager {
     window.removeEventListener('resize', this.onResize)
 
     this.scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
+      if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
         obj.geometry?.dispose()
         if (Array.isArray(obj.material)) {
           obj.material.forEach((m) => m.dispose())

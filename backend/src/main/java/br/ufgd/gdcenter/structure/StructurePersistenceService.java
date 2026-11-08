@@ -67,7 +67,7 @@ public class StructurePersistenceService {
         flushIfDirtySafely();
     }
 
-    private void flushIfDirtySafely() {
+    public void flushIfDirtySafely() {
         if (!dirty.compareAndSet(true, false)) {
             return;
         }
