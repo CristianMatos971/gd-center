@@ -1,5 +1,6 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.outbound.BuildRejectedResponseDTO;
 import br.ufgd.gdcenter.dto.outbound.ErrorResponseDTO;
 import br.ufgd.gdcenter.dto.outbound.PlayerJoinedResponseDTO;
 import br.ufgd.gdcenter.dto.outbound.PlayerLeftResponseDTO;
@@ -7,7 +8,10 @@ import br.ufgd.gdcenter.dto.outbound.PlayerSummaryDTO;
 import br.ufgd.gdcenter.dto.outbound.PongResponseDTO;
 import br.ufgd.gdcenter.dto.outbound.SnapshotPlayerDTO;
 import br.ufgd.gdcenter.dto.outbound.SnapshotResponseDTO;
+import br.ufgd.gdcenter.dto.outbound.StructuresUpdateResponseDTO;
 import br.ufgd.gdcenter.dto.outbound.WelcomeResponseDTO;
+import br.ufgd.gdcenter.structure.BuildRejectionCode;
+import br.ufgd.gdcenter.structure.Structure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -35,14 +39,16 @@ public class WebSocketBroadcaster {
             PlayerSessionState newPlayer,
             int tickRate,
             int snapshotRate,
-            List<PlayerSummaryDTO> allPlayers
+            List<PlayerSummaryDTO> allPlayers,
+            List<Structure> allStructures
     ) {
         WelcomeResponseDTO welcome = new WelcomeResponseDTO(
                 newPlayer.getId(),
                 tickRate,
                 snapshotRate,
                 newPlayer.toStateDTO(),
-                allPlayers
+                allPlayers,
+                allStructures
         );
         sendJson(newPlayer.getSession(), welcome);
     }
@@ -94,6 +100,23 @@ public class WebSocketBroadcaster {
         for (PlayerSessionState player : allPlayers) {
             sendRaw(player.getSession(), serialized);
         }
+    }
+
+    public void broadcastStructuresUpdate(
+            StructuresUpdateResponseDTO update,
+            Collection<PlayerSessionState> allPlayers
+    ) {
+        String serialized = toJson(update);
+        if (serialized == null) {
+            return;
+        }
+        for (PlayerSessionState player : allPlayers) {
+            sendRaw(player.getSession(), serialized);
+        }
+    }
+
+    public void sendBuildRejected(WebSocketSession session, BuildRejectionCode code) {
+        sendJson(session, new BuildRejectedResponseDTO(code));
     }
 
     public void sendPong(WebSocketSession session, double t) {

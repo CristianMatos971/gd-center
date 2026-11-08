@@ -1,10 +1,14 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.inbound.BuildAction;
 import br.ufgd.gdcenter.dto.inbound.JoinRequestDTO;
 import br.ufgd.gdcenter.dto.inbound.PlayerInputDTO;
 import br.ufgd.gdcenter.map.MapData;
 import br.ufgd.gdcenter.map.MapService;
+import br.ufgd.gdcenter.movement.ColliderBox;
 import br.ufgd.gdcenter.movement.MovementSystem;
+import br.ufgd.gdcenter.structure.BuildCommandProcessor;
+import br.ufgd.gdcenter.structure.StructureRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -12,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -27,6 +32,8 @@ public class GameLoopService {
 
     private final MapService mapService;
     private final PlayerRegistry playerRegistry;
+    private final StructureRegistry structureRegistry;
+    private final BuildCommandProcessor buildCommandProcessor;
     private final WebSocketBroadcaster broadcaster;
     private final ConcurrentLinkedQueue<LoopCommand> commandQueue = new ConcurrentLinkedQueue<>();
 
@@ -36,10 +43,14 @@ public class GameLoopService {
     public GameLoopService(
             MapService mapService,
             PlayerRegistry playerRegistry,
+            StructureRegistry structureRegistry,
+            BuildCommandProcessor buildCommandProcessor,
             WebSocketBroadcaster broadcaster
     ) {
         this.mapService = mapService;
         this.playerRegistry = playerRegistry;
+        this.structureRegistry = structureRegistry;
+        this.buildCommandProcessor = buildCommandProcessor;
         this.broadcaster = broadcaster;
     }
 
@@ -72,6 +83,10 @@ public class GameLoopService {
         commandQueue.offer(new LoopCommand.InputCommand(sessionId, input));
     }
 
+    public void enqueueBuild(String sessionId, BuildAction action) {
+        commandQueue.offer(new LoopCommand.BuildCommand(sessionId, action));
+    }
+
     public void enqueueLeave(String sessionId) {
         commandQueue.offer(new LoopCommand.LeaveCommand(sessionId));
     }
@@ -92,11 +107,13 @@ public class GameLoopService {
             switch (cmd) {
                 case LoopCommand.JoinCommand joinCmd -> handleJoin(joinCmd);
                 case LoopCommand.InputCommand inputCmd -> handleInputEnqueue(inputCmd);
+                case LoopCommand.BuildCommand buildCmd -> handleBuildEnqueue(buildCmd);
                 case LoopCommand.LeaveCommand leaveCmd -> handleLeave(leaveCmd);
             }
         }
 
         stepAllPlayers();
+        buildCommandProcessor.processAllPlayersBuildQueues(System.nanoTime());
 
         if (currentTick % SNAPSHOT_INTERVAL_TICKS == 0 && !playerRegistry.isEmpty()) {
             broadcaster.broadcastSnapshot(
@@ -109,6 +126,8 @@ public class GameLoopService {
 
     private void stepAllPlayers() {
         MapData map = mapService.getMapData();
+        List<ColliderBox> colliders = structureRegistry.getColliderBoxes();
+
         for (PlayerSessionState player : playerRegistry.getAllPlayers()) {
             for (int i = 0; i < MAX_INPUTS_PER_TICK; i++) {
                 PlayerInputDTO queued = player.pollInput();
@@ -121,7 +140,7 @@ public class GameLoopService {
                         map.physics(),
                         map.ground(),
                         map.bounds(),
-                        java.util.List.of()
+                        colliders
                 );
                 player.applyStep(nextState, queued.yaw(), queued.pitch(), queued.seq());
             }
@@ -160,7 +179,8 @@ public class GameLoopService {
                 newPlayer,
                 tickRate,
                 snapshotRate,
-                playerRegistry.buildPlayerSummaries()
+                playerRegistry.buildPlayerSummaries(),
+                structureRegistry.getAllStructures()
         );
         broadcaster.broadcastPlayerJoined(newPlayer, playerRegistry.getAllPlayers());
     }
@@ -169,6 +189,13 @@ public class GameLoopService {
         PlayerSessionState player = playerRegistry.getBySessionId(cmd.sessionId());
         if (player != null) {
             player.enqueueInput(cmd.input());
+        }
+    }
+
+    private void handleBuildEnqueue(LoopCommand.BuildCommand cmd) {
+        PlayerSessionState player = playerRegistry.getBySessionId(cmd.sessionId());
+        if (player != null) {
+            player.enqueueBuildAction(cmd.action());
         }
     }
 

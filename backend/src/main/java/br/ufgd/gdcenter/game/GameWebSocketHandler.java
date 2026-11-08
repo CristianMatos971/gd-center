@@ -1,5 +1,6 @@
 package br.ufgd.gdcenter.game;
 
+import br.ufgd.gdcenter.dto.inbound.BuildAction;
 import br.ufgd.gdcenter.dto.inbound.JoinRequestDTO;
 import br.ufgd.gdcenter.dto.inbound.PingRequestDTO;
 import br.ufgd.gdcenter.dto.inbound.PlayerInputDTO;
@@ -55,10 +56,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             root = objectMapper.readTree(message.getPayload());
         } catch (Exception e) {
             log.warn("Malformed JSON from session {}: {}", session.getId(), e.getMessage());
+            gameLoopService.enqueueBuild(session.getId(), new BuildAction.Invalid("Malformed JSON"));
             return;
         }
 
         if (root == null || !root.isObject()) {
+            log.warn("Non-object JSON from session {}", session.getId());
+            gameLoopService.enqueueBuild(session.getId(), new BuildAction.Invalid("Non-object JSON"));
             return;
         }
 
@@ -69,6 +73,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     .ifPresent(input -> gameLoopService.enqueueInput(session.getId(), input));
             case "ping" -> PingRequestDTO.fromJson(root)
                     .ifPresent(ping -> broadcaster.sendPong(decorated, ping.t()));
+            case "build_place", "build_update", "build_remove" ->
+                    gameLoopService.enqueueBuild(session.getId(), BuildAction.fromJson(type, root));
             default -> log.debug("Unknown WebSocket message type '{}' from session {}", type, session.getId());
         }
     }
