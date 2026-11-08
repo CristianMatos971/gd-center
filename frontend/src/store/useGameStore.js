@@ -37,6 +37,8 @@ export const useGameStore = create((set) => ({
   draftColor: '#cccccc',
   selectedStructureId: null,
   rejectionToast: null,
+  canUndo: false,
+  canRedo: false,
 
   setPlayerName: (playerName) => set({ playerName }),
   setScreen: (screen) => set({ screen }),
@@ -126,6 +128,22 @@ export const useGameStore = create((set) => ({
         draftColor: structure.color || state.draftColor,
       }
     }),
+  copyStructureToDraft: (structure) =>
+    set((state) => {
+      if (!structure) return {}
+      return {
+        selectedKind: structure.kind || state.selectedKind,
+        buildTool: 'place',
+        selectedStructureId: null,
+        draftSize: {
+          width: structure.width,
+          height: structure.height,
+          depth: structure.depth,
+        },
+        draftColor: structure.color || state.draftColor,
+      }
+    }),
+  setHistoryState: ({ canUndo, canRedo }) => set({ canUndo, canRedo }),
   showRejectionToast: (code) =>
     set({
       rejectionToast: {
@@ -149,5 +167,7 @@ export const useGameStore = create((set) => ({
       buildTool: 'place',
       selectedStructureId: null,
       rejectionToast: null,
+      canUndo: false,
+      canRedo: false,
     }),
 }))

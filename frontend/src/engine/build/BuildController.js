@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { BuildHistory } from './BuildHistory'
 import { BuildRaycaster, roundCoord } from './BuildRaycaster'
 import { BuildVisuals } from './BuildVisuals'
 import { FreeCameraController } from './FreeCameraController'
@@ -28,6 +29,9 @@ export class BuildController {
     this.freeCamera = new FreeCameraController()
     this.raycaster = new BuildRaycaster()
     this.visuals = new BuildVisuals(sceneManager.scene)
+    this.history = new BuildHistory(networkClient, (historyState) => {
+      useGameStore.getState().setHistoryState(historyState)
+    })
 
     this.isRightMouseHeld = false
     this.cursorNdcX = 0
@@ -176,11 +180,69 @@ export class BuildController {
     }
   }
 
+  handleStructuresUpdate(msg) {
+    this.history.handleStructuresAdded(msg.added || [])
+
+    const store = useGameStore.getState()
+    if (store.selectedStructureId && Array.isArray(msg.updated)) {
+      const updatedSelected = msg.updated.find(
+        (s) => s.id === store.selectedStructureId
+      )
+      if (updatedSelected && this.debounceTimerId === null) {
+        store.setSelectedStructure(updatedSelected)
+      }
+    }
+  }
+
+  handleBuildRejected() {
+    this.history.handleRejected()
+  }
+
   handleStructureRemoved(removedId) {
     const store = useGameStore.getState()
     if (store.selectedStructureId === removedId) {
       this.clearPendingDebounce()
       store.setSelectedStructure(null)
+    }
+  }
+
+  undo() {
+    this.clearPendingDebounce()
+    this.history.undo()
+  }
+
+  redo() {
+    this.clearPendingDebounce()
+    this.history.redo()
+  }
+
+  copyStructure(structure) {
+    if (!structure) return
+    this.clearPendingDebounce()
+    this.verticalOffset = 0
+    useGameStore.getState().copyStructureToDraft(structure)
+  }
+
+  copyHoveredOrSelectedStructure() {
+    const store = useGameStore.getState()
+    if (store.selectedStructureId) {
+      const selected = this.structureManager.getById(store.selectedStructureId)
+      if (selected) {
+        this.copyStructure(selected)
+        return
+      }
+    }
+
+    const ndcX = this.hasCursorPosition ? this.cursorNdcX : 0
+    const ndcY = this.hasCursorPosition ? this.cursorNdcY : 0
+    const pickedId = this.raycaster.pickStructureId(
+      this.sceneManager.camera,
+      ndcX,
+      ndcY,
+      this.structureManager.getMeshes()
+    )
+    if (pickedId) {
+      this.copyStructure(this.structureManager.getById(pickedId))
     }
   }
 
@@ -199,8 +261,12 @@ export class BuildController {
     const store = useGameStore.getState()
     if (!store.selectedStructureId) return
     const id = store.selectedStructureId
+    const existing = this.structureManager.getById(id)
     this.clearPendingDebounce()
     store.setSelectedStructure(null)
+    if (existing) {
+      this.history.recordRemove(existing)
+    }
     this.networkClient.sendBuildRemove(id)
   }
 
@@ -238,8 +304,9 @@ export class BuildController {
       const current = this.structureManager.getById(store.selectedStructureId)
       if (!current) return
 
-      this.networkClient.sendBuildUpdate({
+      const updatedPayload = {
         id: current.id,
+        kind: current.kind,
         x: current.x,
         y: current.y,
         z: current.z,
@@ -247,7 +314,9 @@ export class BuildController {
         height: size.height,
         depth: size.depth,
         color,
-      })
+      }
+      this.history.recordUpdate(current, updatedPayload)
+      this.networkClient.sendBuildUpdate(updatedPayload)
     }, UPDATE_DEBOUNCE_MS)
   }
 
@@ -287,6 +356,20 @@ export class BuildController {
 
     if (e.button === 0 && !this.isRightMouseHeld) {
       this.updateCursorNdc(e.clientX, e.clientY)
+
+      if (e.altKey) {
+        const pickedId = this.raycaster.pickStructureId(
+          this.sceneManager.camera,
+          this.cursorNdcX,
+          this.cursorNdcY,
+          this.structureManager.getMeshes()
+        )
+        if (pickedId) {
+          this.copyStructure(this.structureManager.getById(pickedId))
+        }
+        return
+      }
+
       const store = useGameStore.getState()
 
       if (store.buildTool === 'place') {
@@ -302,7 +385,7 @@ export class BuildController {
           this.verticalOffset
         )
         if (placement) {
-          this.networkClient.sendBuildPlace({
+          const payload = {
             kind: store.selectedKind,
             x: placement.x,
             y: placement.y,
@@ -311,7 +394,9 @@ export class BuildController {
             height: store.draftSize.height,
             depth: store.draftSize.depth,
             color: store.draftColor,
-          })
+          }
+          this.history.recordPendingPlace(payload)
+          this.networkClient.sendBuildPlace(payload)
         }
       } else {
         const pickedId = this.raycaster.pickStructureId(
@@ -360,13 +445,35 @@ export class BuildController {
     const activeTag = document.activeElement?.tagName
     const isInputFocused = activeTag === 'INPUT' || activeTag === 'TEXTAREA'
 
-    if (e.code === 'KeyB' && !isInputFocused) {
+    if (e.code === 'KeyB' && !isInputFocused && !e.ctrlKey && !e.metaKey) {
       e.preventDefault()
       this.toggleBuildMode()
       return
     }
 
     if (!store.buildMode) return
+
+    if ((e.ctrlKey || e.metaKey) && !isInputFocused) {
+      if (e.code === 'KeyZ') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          this.redo()
+        } else {
+          this.undo()
+        }
+        return
+      }
+      if (e.code === 'KeyY') {
+        e.preventDefault()
+        this.redo()
+        return
+      }
+      if (e.code === 'KeyC') {
+        e.preventDefault()
+        this.copyHoveredOrSelectedStructure()
+        return
+      }
+    }
 
     if (e.code === 'Escape') {
       if (isInputFocused) {
@@ -406,6 +513,9 @@ export class BuildController {
         break
       case 'KeyR':
         this.rotate90()
+        break
+      case 'KeyG':
+        this.copyHoveredOrSelectedStructure()
         break
       case 'PageUp':
         e.preventDefault()
@@ -450,6 +560,7 @@ export class BuildController {
   dispose() {
     this.clearPendingDebounce()
     this.clearFlyKeys()
+    this.history.clear()
     this.isRightMouseHeld = false
     if (document.pointerLockElement === this.canvasElement) {
       document.exitPointerLock?.()

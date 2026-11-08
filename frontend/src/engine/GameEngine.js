@@ -73,8 +73,12 @@ export class GameEngine {
       onPlayerJoined: (msg) => this.handlePlayerJoined(msg),
       onPlayerLeft: (msg) => this.handlePlayerLeft(msg),
       onSnapshot: (msg) => this.handleSnapshot(msg),
-      onStructuresUpdate: (msg) => this.structureManager.applyUpdate(msg),
+      onStructuresUpdate: (msg) => {
+        this.structureManager.applyUpdate(msg)
+        this.buildController?.handleStructuresUpdate(msg)
+      },
       onBuildRejected: (msg) => {
+        this.buildController?.handleBuildRejected()
         useGameStore.getState().showRejectionToast(msg.code)
       },
       onServerError: (message) => {

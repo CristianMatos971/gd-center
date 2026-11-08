@@ -16,6 +16,8 @@ export function BuildPanel({ engineRef }) {
   const draftColor = useGameStore((s) => s.draftColor)
   const selectedStructureId = useGameStore((s) => s.selectedStructureId)
   const rejectionToast = useGameStore((s) => s.rejectionToast)
+  const canUndo = useGameStore((s) => s.canUndo)
+  const canRedo = useGameStore((s) => s.canRedo)
 
   const selectBuildKind = useGameStore((s) => s.selectBuildKind)
   const setBuildTool = useGameStore((s) => s.setBuildTool)
@@ -47,13 +49,31 @@ export function BuildPanel({ engineRef }) {
       <div className="build-panel">
         <div className="build-panel-header">
           <span className="build-panel-title">Modo Construção</span>
-          <button
-            type="button"
-            className="build-btn build-btn-exit"
-            onClick={() => getBuildCtrl()?.exitBuildMode()}
-          >
-            Sair (B)
-          </button>
+          <div className="build-btn-row">
+            <button
+              type="button"
+              className="build-btn"
+              disabled={!canUndo}
+              onClick={() => getBuildCtrl()?.undo()}
+            >
+              Desfazer (Ctrl+Z)
+            </button>
+            <button
+              type="button"
+              className="build-btn"
+              disabled={!canRedo}
+              onClick={() => getBuildCtrl()?.redo()}
+            >
+              Refazer (Ctrl+Y)
+            </button>
+            <button
+              type="button"
+              className="build-btn build-btn-exit"
+              onClick={() => getBuildCtrl()?.exitBuildMode()}
+            >
+              Sair (B)
+            </button>
+          </div>
         </div>
 
         <div className="build-section">
@@ -78,6 +98,13 @@ export function BuildPanel({ engineRef }) {
               }}
             >
               Selecionar
+            </button>
+            <button
+              type="button"
+              className="build-btn"
+              onClick={() => getBuildCtrl()?.copyHoveredOrSelectedStructure()}
+            >
+              Copiar p/ Rascunho (G / Alt+Clique)
             </button>
           </div>
         </div>
@@ -183,8 +210,8 @@ export function BuildPanel({ engineRef }) {
 
         <div className="build-shortcuts">
           <strong>Atalhos:</strong> Botão Direito: Olhar | WASD/Espaço/C/Shift:
-          Voar | 1/2/3: Tipo | Q: Ferramenta | R: Girar | PgUp/PgDn: Offset Y |
-          Del: Remover | Esc: Limpar seleção
+          Voar | 1/2/3: Tipo | Q: Ferramenta | R: Girar | G / Alt+Clique: Copiar
+          | Ctrl+Z/Y: Desfazer/Refazer | PgUp/PgDn: Offset Y | Del: Remover
         </div>
       </div>
     </>
